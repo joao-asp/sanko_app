@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma Viva Rita de Cássia - Completa</title>
+    
+    <!-- Biblioteca de Mapa Interativo (Leaflet) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', -apple-system, sans-serif; }
+        body { background-color: #0f172a; color: #f1f5f9; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        /* NAVEGAÇÃO */
+        nav { background-color: #1e293b; border-bottom: 1px solid #334155; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .nav-logo h1 { font-size: 18px; font-weight: 700; color: #38bdf8; }
+        .nav-tabs { display: flex; gap: 8px; }
+        .tab-btn { background: #334155; border: 1px solid #475569; color: #94a3b8; padding: 10px 20px; font-size: 14px; font-weight: 600; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .tab-btn:hover { background-color: #475569; color: #fff; }
+        .tab-btn.active { background-color: #0284c7; color: #fff; border-color: #38bdf8; }
+
+        .content-viewport { flex: 1; display: flex; position: relative; overflow: hidden; }
+        .page-view { display: none; width: 100%; height: 100%; overflow-y: auto; }
+        .page-view.active { display: flex; }
+
+        /* ================= TELA 1: MAPA COMEMORATIVO ================= */
+        #mapa-comemorativo { position: relative; background: #0b0f19; display: none; }
+        #mapa-comemorativo.active { display: block; }
+        #real-map { width: 100%; height: 100%; z-index: 1; background: #0b0f19; }
+
+        /* Customização dos Pins no Mapa Real */
+        .custom-pin { background: transparent; border: none; position: relative; display: flex; justify-content: center; align-items: center; }
+        .pin-icon { width: 36px; height: 36px; border-radius: 50% 50% 50% 0; background: #0284c7; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; transition: 0.2s; position: relative; z-index: 10;}
+        .pin-icon:hover { transform: rotate(-45deg) scale(1.15); background: #38bdf8; }
+        .pin-icon i { transform: rotate(45deg); color: white; font-weight: bold; font-style: normal; }
+        .pin-pulse { position: absolute; width: 12px; height: 12px; background: rgba(2,132,199,0.5); border-radius: 50%; bottom: -5px; transform: rotateX(75deg); animation: pulse 2s infinite; z-index: 1; }
+        @keyframes pulse { 0% { transform: rotateX(75deg) scale(0.5); opacity: 1; } 100% { transform: rotateX(75deg) scale(3.5); opacity: 0; } }
+
+        /* Formulário de Adicionar Conquista */
+        .conquista-panel { position: absolute; top: 20px; right: 20px; width: 320px; background: rgba(30, 41, 59, 0.95); border: 1px solid #334155; border-radius: 12px; padding: 20px; z-index: 500; backdrop-filter: blur(8px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);}
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 11px; color: #94a3b8; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 8px; color: white; outline: none; }
+        .btn-submit { width: 100%; background: #0284c7; color: white; border: none; padding: 10px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .btn-submit:hover { background: #0369a1; }
+
+        /* Modal do Mapa (Carrossel) */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.85); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); }
+        .conquista-card-detail { background: #1e293b; border: 1px solid #334155; border-radius: 16px; width: 540px; max-width: 90%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); overflow: hidden; position: relative; animation: modalFade 0.2s ease-out; }
+        @keyframes modalFade { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-close { position: absolute; top: 12px; right: 16px; background: #334155; border: none; color: #94a3b8; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; z-index: 10; display:flex; align-items:center; justify-content:center;}
+        .modal-close:hover { color: #fff; background: #ef4444; }
+
+        .carousel-container { width: 100%; height: 240px; background: #0f172a; position: relative; overflow: hidden; }
+        .carousel-track { display: flex; width: 300%; height: 100%; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .carousel-slide { width: 33.333%; height: 100%; padding: 24px; position: relative; }
+        .slide-placeholder-box { width: 100%; height: 100%; border: 2px dashed #475569; border-radius: 8px; background: #1e293b; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; font-size: 14px; text-align: center; padding: 10px;}
+        .slide-caption { position: absolute; bottom: 20px; left: 30px; right: 30px; z-index: 2; color: #f8fafc; font-weight: 600; text-align: center; background: rgba(15, 23, 42, 0.8); padding: 6px 12px; border-radius: 6px; }
+        .carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(30, 41, 59, 0.9); border: 1px solid #475569; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; z-index: 5; font-weight: bold; }
+        .carousel-btn:hover { background: #0284c7; border-color: #38bdf8; }
+        .btn-prev { left: 16px; } .btn-next { right: 16px; }
+
+        .detail-body { padding: 24px; }
+        .detail-title { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+        .detail-meta { font-size: 12px; color: #38bdf8; font-weight: 600; text-transform: uppercase; margin-bottom: 14px; }
+        .detail-text { font-size: 14px; color: #cbd5e1; line-height: 1.6; }
+
+        /* ================= TELA 2: MODO RPG ================= */
+        #modo-jogo { flex-direction: row; }
+        
+        /* Lateral Esquerda (Status e Controles) */
+        .rpg-sidebar { width: 320px; background: #1e293b; border-right: 1px solid #334155; padding: 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+        .rpg-stat-card { background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 16px; text-align: center; }
+        .rpg-stat-label { font-size: 12px; color: #94a3b8; font-weight: bold; }
+        .rpg-stat-val { font-size: 34px; font-weight: 900; color: #f59e0b; margin-top: 4px; }
+
+        .frentes-container { background: #0f172a; border-radius: 12px; padding: 16px; border: 1px solid #334155; }
+        .rpg-frente-box { margin-bottom: 12px; }
+        .rpg-frente-info { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; font-weight: 600; color: #cbd5e1; }
+        .rpg-bar-bg { background: #1e293b; height: 8px; border-radius: 4px; overflow: hidden; }
+        .rpg-bar-fill { height: 100%; width: 0%; transition: width 0.4s; }
+        .fill-blue { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+        .fill-purple { background: linear-gradient(90deg, #8b5cf6, #d946ef); }
+
+        .controls-row { display: flex; gap: 10px; }
+        .module-box { background: #111827; border: 1px solid #334155; border-radius: 12px; padding: 16px; text-align: center; flex: 1; }
+        .module-title { font-size: 10px; color: #94a3b8; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; }
+        .dice-btn { width: 60px; height: 60px; background: #1e293b; border: 2px solid #475569; border-radius: 12px; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; cursor: pointer; user-select: none; }
+        .dice-btn.rolling { animation: rollDice 0.5s ease-in-out; background: #0284c7; border-color: #38bdf8; color: transparent; }
+        .timer-val { font-size: 24px; font-weight: 800; color: #38bdf8; margin-bottom: 8px; }
+        .timer-btn { background: #0284c7; border: none; color: white; padding: 6px; width: 100%; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; margin-bottom: 4px;}
+        .timer-btn-reset { background: #334155; border: 1px solid #475569;}
+
+        /* Painel Central (História e Hub) */
+        .rpg-center-panel { flex: 2; padding: 32px; background: #0f172a; overflow-y: auto; }
+        .timeline-controls { display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid #334155; padding-bottom: 16px; margin-bottom: 24px; }
+        .btn-phase { background: #1e293b; border: 1px solid #334155; color: #94a3b8; padding: 8px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .btn-phase.active { background: #065f46; color: #34d399; border-color: #059669; }
+
+        /* Fases de História Construídas no HTML */
+        .story-phase { display: none; background: linear-gradient(145deg, #1e293b, #111827); border: 1px solid #334155; border-radius: 16px; padding: 32px; position: relative; margin-bottom: 24px; }
+        .story-phase.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .phase-year { position: absolute; top: 20px; right: 24px; font-size: 48px; font-weight: 900; color: rgba(255,255,255,0.03); }
+        .phase-title { font-size: 22px; font-weight: 800; color: #38bdf8; margin-bottom: 16px; }
+        .gm-speech { background: rgba(56,189,248,0.05); border-left: 4px solid #38bdf8; padding: 16px; border-radius: 0 8px 8px 0; margin-bottom: 16px; font-style: italic; color: #e2e8f0; line-height: 1.5; }
+        .mechanic-text { font-size: 13px; color: #94a3b8; }
+
+        /* Hub de Jogos */
+        .hub-title { font-size: 16px; font-weight: bold; margin-bottom: 12px; color: #fff;}
+        .minigames-hub { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .mg-card { background: #111827; border: 1px solid #334155; border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .mg-card:hover { border-color: #38bdf8; background: #1e293b; }
+        .mg-icon { font-size: 28px; margin-bottom: 8px; }
+        .mg-title { font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #fff;}
+        .mg-reward { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #34d399; }
+
+        /* Interface dos Jogos Construída no HTML */
+        .game-interface { display: none; background: #111827; border: 1px solid #334155; border-radius: 12px; padding: 24px; text-align: center; }
+        .game-interface.active { display: block; animation: fadeIn 0.3s; }
+        .btn-claim { background: #10b981; color: #fff; font-weight: bold; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 16px; display: none; }
+        .btn-claim.visible { display: block; }
+        
+        .quiz-item { background: #1e293b; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; border: 1px solid #334155; cursor: pointer; text-align: left; font-size: 13px; color: #fff;}
+        .quiz-item input { width: 18px; height: 18px; cursor: pointer; }
+        .naval-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 300px; margin: 16px auto; }
+        .naval-cell { background: #1e293b; border: 1px solid #334155; height: 50px; border-radius: 6px; font-weight: bold; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .naval-cell.hit { background: rgba(16, 185, 129, 0.2); color: #10b981; border-color: #10b981; }
+        .naval-cell.miss { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: #ef4444; }
+
+        /* Lateral Direita (Baralho) */
+        .rpg-right-panel { width: 320px; background: #1e293b; border-left: 1px solid #334155; padding: 24px; display: flex; flex-direction: column; }
+        .deck-btn { width: 100%; height: 320px; background: linear-gradient(135deg, #0369a1, #0c4a6e); border: 2px solid #38bdf8; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: #fff; box-shadow: -6px 6px 0 #0f172a; transition: 0.2s;}
+        .deck-btn:hover { transform: translate(4px, -4px); box-shadow: -8px 8px 0 #0284c7; }
+        .drawn-card { display: none; background: #0f172a; border: 1px solid #38bdf8; border-radius: 16px; padding: 24px; }
+        .btn-burn { width: 100%; margin-top: 16px; background: transparent; border: 1px solid #ef4444; color: #fca5a5; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-burn:hover { background: #ef4444; color: #fff; }
+    </style>
+</head>
+<body>
+
+    <!-- NAV BAR -->
+    <nav>
+        <div class="nav-logo"><h1>A Conquista da Rita de Cássia</h1><span>Campinas-SP</span></div>
+        <div class="nav-tabs">
+            <!-- MAPA COMO ABA PRINCIPAL (Padrão) -->
+            <button class="tab-btn active" onclick="switchTab('mapa-comemorativo', this)">🗺️ Mapa Comemorativo</button>
+            <button class="tab-btn" onclick="switchTab('modo-jogo', this)">🎮 Painel do Mestre</button>
+        </div>
+    </nav>
+
+    <div class="content-viewport">
+        
+        <!-- ==================== TELA 1: MAPA COMEMORATIVO ==================== -->
+        <div id="mapa-comemorativo" class="page-view active">
+            <!-- O container onde o mapa real do Leaflet será injetado -->
+            <div id="real-map"></div>
+
+            <div class="conquista-panel">
+                <h3 style="color:#fff; font-size:14px; margin-bottom:10px;">✍️ Adicione Sua Conquista</h3>
+                <div class="form-group"><label>Título da Vitória</label><input type="text" id="form-title" placeholder="Ex: Mutirão..."></div>
+                <div class="form-group"><label>Relato Histórico</label><textarea id="form-desc" rows="3" placeholder="Conte como a comunidade se uniu..."></textarea></div>
+                <button class="btn-submit" onclick="addUserConquista()">Fixar no Mapa</button>
+            </div>
+
+            <!-- Modal do Mapa com Carrossel -->
+            <div id="conquista-modal" class="modal-overlay">
+                <div class="conquista-card-detail">
+                    <button class="modal-close" onclick="closeMapModal()">✕</button>
+                    <div class="carousel-container">
+                        <button class="carousel-btn btn-prev" onclick="moveCarousel(-1)">◀</button>
+                        <button class="carousel-btn btn-next" onclick="moveCarousel(1)">▶</button>
+                        <div class="carousel-track" id="carousel-track">
+                            <div class="carousel-slide">
+                                <div class="slide-placeholder-box"><span>🖼️ Imagem 1</span></div><span class="slide-caption" id="cap-1">Lâmina 1</span>
+                            </div>
+                            <div class="carousel-slide">
+                                <div class="slide-placeholder-box"><span>📷 Imagem 2</span></div><span class="slide-caption" id="cap-2">Lâmina 2</span>
+                            </div>
+                            <div class="carousel-slide">
+                                <div class="slide-placeholder-box"><span>📍 Imagem 3</span></div><span class="slide-caption" id="cap-3">Lâmina 3</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="detail-body">
+                        <h2 id="modal-title" class="detail-title">Título</h2>
+                        <div id="modal-meta" class="detail-meta">Categoria</div>
+                        <p id="modal-text" class="detail-text">Descrição</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TELA 2: MODO JOGO (RPG) ==================== -->
+        <div id="modo-jogo" class="page-view">
+            
+            <!-- Coluna Esquerda: Status -->
+            <div class="rpg-sidebar">
+                <div class="rpg-stat-card">
+                    <div class="rpg-stat-label">⚡ Força Comunitária</div>
+                    <div id="rpg-fc" class="rpg-stat-val">1000</div>
+                </div>
+
+                <div class="frentes-container">
+                    <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 12px;">Exigências das Associações</div>
+                    <div class="rpg-frente-box">
+                        <div class="rpg-frente-info"><span style="color:#94a3b8;">Base (Fazendinha)</span><span id="txt-base" style="color:#38bdf8;">0 / 800</span></div>
+                        <div class="rpg-bar-bg"><div id="bar-base" class="rpg-bar-fill fill-blue"></div></div>
+                    </div>
+                    <div class="rpg-frente-box">
+                        <div class="rpg-frente-info"><span style="color:#94a3b8;">Infra (Sta Bárbara)</span><span id="txt-infra" style="color:#38bdf8;">0 / 1200</span></div>
+                        <div class="rpg-bar-bg"><div id="bar-infra" class="rpg-bar-fill fill-blue"></div></div>
+                    </div>
+                    <div class="rpg-frente-box">
+                        <div class="rpg-frente-info"><span style="color:#94a3b8;">Docente (Boa Vista)</span><span id="txt-docente" style="color:#38bdf8;">0 / 1500</span></div>
+                        <div class="rpg-bar-bg"><div id="bar-docente" class="rpg-bar-fill fill-blue"></div></div>
+                    </div>
+                    <div class="rpg-frente-box">
+                        <div class="rpg-frente-info"><span style="color:#94a3b8;">Acess. (São Jorge)</span><span id="txt-acess" style="color:#d946ef;">0 / 500</span></div>
+                        <div class="rpg-bar-bg"><div id="bar-acess" class="rpg-bar-fill fill-purple"></div></div>
+                    </div>
+                </div>
+
+                <div class="controls-row">
+                    <div class="module-box">
+                        <div class="module-title">Dado (1d6)</div>
+                        <div class="dice-btn" id="dice-btn" onclick="rollDice()">🎲</div>
+                    </div>
+                    <div class="module-box">
+                        <div class="module-title">Tempo Debate</div>
+                        <div class="timer-val" id="timer-display">02:00</div>
+                        <button class="timer-btn" id="timer-btn" onclick="toggleTimer()">Iniciar</button>
+                        <button class="timer-btn timer-btn-reset" onclick="resetTimer()" style="margin-top: 4px;">Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna Central: História e Hub -->
+            <div class="rpg-center-panel">
+                <div class="timeline-controls">
+                    <button class="btn-phase active" onclick="setPhase(1, this)">1. Choque</button>
+                    <button class="btn-phase" onclick="setPhase(2, this)">2. Coletivo</button>
+                    <button class="btn-phase" onclick="setPhase(3, this)">3. Burocracia</button>
+                    <button class="btn-phase" onclick="setPhase(4, this)">4. Fake News</button>
+                    <button class="btn-phase" onclick="setPhase(5, this)">5. Mutirão</button>
+                    <button class="btn-phase" onclick="setPhase(6, this)">6. Vitória</button>
+                </div>
+
+                <div id="phase-1" class="story-phase active">
+                    <div class="phase-year">1992</div><div class="phase-title">1. O Choque de Realidade</div>
+                    <div class="gm-speech">📢 "O bairro cresceu rápido e a escola do Parque Fazendinha bloqueou as matrículas locais. O Estado manda irem pro distante Rosolen! O que vamos fazer?"</div>
+                    <div class="mechanic-text"><strong>Mecânica:</strong> Use o cronômetro para o grupo debater. Ao fim, rolem o dado.</div>
+                </div>
+                <div id="phase-2" class="story-phase">
+                    <div class="phase-year">1995</div><div class="phase-title">2. O Coletivo Horizontal</div>
+                    <div class="gm-speech">📢 "Precisamos nos organizar. É hora de reunir as 5 associações de moradores sob a Teologia da Libertação."</div>
+                    <div class="mechanic-text"><strong>Mecânica:</strong> Abram o <strong>Quiz da Comunidade</strong> no Hub abaixo.</div>
+                </div>
+                <div id="phase-3" class="story-phase">
+                    <div class="phase-year">1998</div><div class="phase-title">3. O Labirinto Burocrático</div>
+                    <div class="gm-speech">📢 "A comissão foi a SP de ônibus, mas o abaixo-assinado se perdeu nas gavetas! Vocês têm poucas chances para achá-lo."</div>
+                    <div class="mechanic-text"><strong>Mecânica:</strong> Abram a <strong>Batalha Burocrática</strong> no Hub.</div>
+                </div>
+                <div id="phase-4" class="story-phase">
+                    <div class="phase-year">199X</div><div class="phase-title">4. A Desinformação</div>
+                    <div class="gm-speech">📢 "Boatos dizem que o terreno foi vendido e o projeto falhou. Vão às ruas combater essa desinformação!"</div>
+                    <div class="mechanic-text"><strong>Mecânica:</strong> Rolagem de D6 individual. Falhas perdem FC do grupo.</div>
+                </div>
+                <div id="phase-5" class="story-phase">
+                    <div class="phase-year">1999</div><div class="phase-title">5. O Mutirão Físico</div>
+                    <div class="gm-speech">📢 "Terreno cedido, mas sem verba. Teremos que recolher cimento e erguer as salas com as próprias mãos!"</div>
+                    <div class="mechanic-text"><strong>Mecânica:</strong> Usem o <strong>Desafio de Equipe</strong> no Hub.</div>
+                </div>
+                <div id="phase-6" class="story-phase">
+                    <div class="phase-year">2000</div><div class="phase-title">6. A Conquista dos Professores</div>
+                    <div class="gm-speech">📢 "Construímos a escola! Mas o Estado recusa enviar os professores se não mostrarmos força total."</div>
+                    <div class="mechanic-text"><strong>Mecânica:</strong> Se todas as barras da esquerda estiverem cheias, o grupo vence a campanha!</div>
+                </div>
+
+                <div class="hub-title">Hub de Mini-Games (Painel de Recompensas)</div>
+                <div class="minigames-hub">
+                    <div class="mg-card" onclick="openGame('quiz')"><div class="mg-icon">🧠</div><div class="mg-title">Quiz</div><div class="mg-reward">+ Articulação</div></div>
+                    <div class="mg-card" onclick="openGame('naval')"><div class="mg-icon">🚢</div><div class="mg-title">Batalha Naval</div><div class="mg-reward">+ Docentes</div></div>
+                    <div class="mg-card" onclick="openGame('puzzle')"><div class="mg-icon">🧱</div><div class="mg-title">Desafio Físico</div><div class="mg-reward">+ Infraestrutura</div></div>
+                    <div class="mg-card" onclick="openGame('silence')"><div class="mg-icon">🤫</div><div class="mg-title">Silêncio</div><div class="mg-reward" style="color:#d946ef;">+ Acessibilidade</div></div>
+                </div>
+
+                <div id="game-quiz" class="game-interface">
+                    <div class="game-panel-title">🧠 Quiz Oficial das Entrevistas</div>
+                    <p style="color:#94a3b8; font-size:13px; margin-bottom:16px;">Mestre, leia as afirmações. Marque o que o grupo acertar.</p>
+                    <label class="quiz-item"><input type="checkbox" onchange="checkQuiz()"> 1. Erguidas em mutirões com doação de cimento.</label>
+                    <label class="quiz-item"><input type="checkbox" onchange="checkQuiz()"> 2. Bairros: São Jorge, Fazendinha, Sta Bárbara, Eulina, Boa Vista.</label>
+                    <label class="quiz-item"><input type="checkbox" onchange="checkQuiz()"> 3. Bloqueio do Aterro Sanitário por 20 dias.</label>
+                    <label class="quiz-item"><input type="checkbox" onchange="checkQuiz()"> 4. Fortalecidos pela Teologia da Libertação.</label>
+                    <label class="quiz-item"><input type="checkbox" onchange="checkQuiz()"> 5. Fretaram ônibus para a Secretaria em SP.</label>
+                    <button class="btn-claim" id="btn-quiz" onclick="addPoints('base', 300, 'game-quiz')">🎉 Reivindicar +300 Articulação</button>
+                </div>
+
+                <div id="game-naval" class="game-interface">
+                    <div class="game-panel-title">🚢 Batalha Burocrática</div>
+                    <p style="color:#94a3b8; font-size:13px;" id="naval-info">Encontrem o ofício em 4 tentativas.</p>
+                    <div class="naval-grid">
+                        <div class="naval-cell" onclick="playNav(this, false)">A1</div><div class="naval-cell" onclick="playNav(this, false)">A2</div><div class="naval-cell" onclick="playNav(this, false)">A3</div><div class="naval-cell" onclick="playNav(this, false)">A4</div>
+                        <div class="naval-cell" onclick="playNav(this, false)">B1</div><div class="naval-cell" onclick="playNav(this, false)">B2</div><div class="naval-cell" onclick="playNav(this, true)">B3</div><div class="naval-cell" onclick="playNav(this, false)">B4</div>
+                    </div>
+                    <button class="btn-claim" id="btn-naval" onclick="addPoints('docente', 300, 'game-naval')">🎉 Reivindicar +300 Corpo Docente</button>
+                </div>
+
+                <div id="game-puzzle" class="game-interface">
+                    <div class="game-panel-title">🧱 Desafio Físico: Ler Mentes</div>
+                    <p style="color:#94a3b8; font-size:13px; margin-bottom:16px;">Mestre, peça que 2 jogadores falem uma palavra idêntica ao mesmo tempo (Sintonia). Se conseguirem, libere os pontos.</p>
+                    <button class="btn-claim visible" onclick="addPoints('infra', 300, 'game-puzzle')">✅ Grupo Venceu (+300 Infraestrutura)</button>
+                </div>
+
+                <div id="game-silence" class="game-interface">
+                    <div class="game-panel-title" style="color:#d946ef;">🤫 Desafio de Inclusão: Cidade Dorme</div>
+                    <p style="color:#94a3b8; font-size:13px; margin-bottom:16px;">O grupo deve jogar uma adaptação silenciosa ou audiodescritiva na mesa para entender acessibilidade. Valide se passarem.</p>
+                    <button class="btn-claim visible" style="background:#d946ef;" onclick="addPoints('acess', 300, 'game-silence')">✅ Inclusão Concluída (+300 Acess.)</button>
+                </div>
+            </div>
+
+            <!-- Coluna Direita: Baralho -->
+            <div class="rpg-right-panel">
+                <div style="font-weight: 800; text-transform: uppercase; margin-bottom: 8px; color: #fff;">Baralho de Aliados</div>
+                <div style="font-size: 11px; color: #94a3b8; margin-bottom: 16px;">(Perma-Death: Use e Queime)</div>
+                
+                <div class="deck-btn" id="deck-btn" onclick="drawCard()">PUXAR CARTA</div>
+
+                <div class="drawn-card" id="drawn-card">
+                    <div style="color:#38bdf8; font-size:10px; font-weight:bold; margin-bottom:8px;" id="card-role">ROLE</div>
+                    <div style="font-size:20px; font-weight:800; color:#fff; margin-bottom:8px;" id="card-name">NOME</div>
+                    <div style="font-size:13px; color:#cbd5e1; margin-bottom:16px;" id="card-desc">DESC</div>
+                    <div style="background:#1e293b; border-left:3px solid #10b981; padding:12px; font-size:11px; color:#34d399;" id="card-skill">SKILL</div>
+                    <button class="btn-burn" onclick="hideCard()">🔥 Queimar Carta</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================= SCRIPTS ================= -->
+    <script>
+        // --- 1. CONFIGURAÇÃO DO MAPA REAL (Leaflet.js) ---
+        let map;
+        function initMap() {
+            if(map) return; // evita inicializar duas vezes
+            
+            // Foco na região de Campinas (Parque São Jorge)
+            map = L.map('real-map').setView([-22.892, -47.120], 14);
+
+            // Adiciona o tile de mapa em Dark Mode
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap & CartoDB'
+            }).addTo(map);
+
+            // Criação do Ícone Customizado HTML
+            const createIcon = (letter, bgColor) => L.divIcon({
+                className: 'custom-pin',
+                html: `<div class="pin-icon" style="background:${bgColor};"><i>${letter}</i></div><div class="pin-pulse"></div>`,
+                iconSize: [36, 36],
+                iconAnchor: [18, 36]
+            });
+
+            // Pins Históricos Reais (Coordenadas Aproximadas baseadas nos relatos)
+            L.marker([-22.890, -47.122], {icon: createIcon('E', '#e11d48')}).addTo(map).on('click', () => openMapModal('rita'));
+            L.marker([-22.880, -47.135], {icon: createIcon('M', '#0284c7')}).addTo(map).on('click', () => openMapModal('fazendinha'));
+            L.marker([-22.885, -47.115], {icon: createIcon('A', '#16a34a')}).addTo(map).on('click', () => openMapModal('associacao'));
+        }
+
+        // --- 2. TROCA DE ABAS E INICIALIZAÇÃO ---
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.page-view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+            
+            // Se abrir o mapa, manda a biblioteca se redimensionar
+            if(tabId === 'mapa-comemorativo' && map) {
+                setTimeout(() => map.invalidateSize(), 100);
+            }
+        }
+
+        // Inicializa o mapa ao carregar a página (Aba padrão)
+        window.onload = function() {
+            initMap();
+        };
+
+        // --- 3. SCRIPTS DO MAPA COMEMORATIVO ---
+        const mapData = {
+            rita: { title: "E.E. Profa. Rita de Cássia", meta: "Ensino Médio", desc: "A escola foi inaugurada após forte mobilização em 1998 com abaixo-assinados na capital.", slides: ["Maquete Prédio", "Abaixo-assinado 1998", "Fachada Atual"] },
+            fazendinha: { title: "Escola Mun. Pq. Fazendinha", meta: "Educação Básica", desc: "O primeiro polo educacional da região que superlotou com o boom de 1991.", slides: ["Foto Aérea", "Primeira Turma", "Prédio Hoje"] },
+            associacao: { title: "Associações & Comunidades de Base", meta: "União", desc: "Liderada pelo Padre Rubio, unificou as pautas de infraestrutura e educação.", slides: ["Reunião 1991", "Festa do Padroeiro", "Lideranças Juntas"] }
+        };
+
+        let mapSlideIdx = 0;
+        function openMapModal(key) {
+            const data = mapData[key];
+            if(!data) return;
+            document.getElementById('modal-title').innerText = data.title;
+            document.getElementById('modal-meta').innerText = data.meta;
+            document.getElementById('modal-text').innerText = data.desc;
+            document.getElementById('cap-1').innerText = "📷 " + data.slides[0];
+            document.getElementById('cap-2').innerText = "📷 " + data.slides[1];
+            document.getElementById('cap-3').innerText = "📷 " + data.slides[2];
+            mapSlideIdx = 0;
+            document.getElementById('carousel-track').style.transform = "translateX(0%)";
+            document.getElementById('conquista-modal').style.display = 'flex';
+        }
+        function closeMapModal() { document.getElementById('conquista-modal').style.display = 'none'; }
+        function moveCarousel(dir) {
+            mapSlideIdx = (mapSlideIdx + dir + 3) % 3;
+            document.getElementById('carousel-track').style.transform = `translateX(-${mapSlideIdx * 33.333}%)`;
+        }
+
+        function addUserConquista() {
+            const title = document.getElementById('form-title').value;
+            if(!title) return alert("Preencha o título!");
+            
+            // Pega o centro atual do mapa e joga um pino customizado do usuário
+            const center = map.getCenter();
+            const iconU = L.divIcon({
+                className: 'custom-pin',
+                html: `<div class="pin-icon" style="background:#ea580c;"><i>U</i></div><div class="pin-pulse"></div>`,
+                iconSize: [36, 36], iconAnchor: [18, 36]
+            });
+            
+            L.marker([center.lat, center.lng], {icon: iconU}).addTo(map)
+             .bindPopup(`<b>${title}</b><br>Contribuição do Usuário.`);
+            
+            document.getElementById('form-title').value = "";
+            alert("Sua conquista foi adicionada ao centro da sua tela de mapa!");
+        }
+
+        // --- 4. SCRIPTS DO RPG ---
+        function setPhase(num, btn) {
+            document.querySelectorAll('.btn-phase').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.story-phase').forEach(p => p.classList.remove('active'));
+            document.getElementById('phase-' + num).classList.add('active');
+            document.querySelectorAll('.game-interface').forEach(g => g.classList.remove('active'));
+        }
+
+        function openGame(type) {
+            document.querySelectorAll('.game-interface').forEach(g => g.classList.remove('active'));
+            document.getElementById('game-' + type).classList.add('active');
+            if(type === 'naval') { navAtt = 0; navAct = true; document.getElementById('naval-info').innerHTML="Encontrem o ofício em 4 tentativas."; document.querySelectorAll('.naval-cell').forEach(c => c.classList.remove('hit', 'miss')); document.getElementById('btn-naval').classList.remove('visible');}
+        }
+
+        let pts = { base: 0, infra: 0, docente: 0, acess: 0 };
+        function addPoints(type, amount, gameId) {
+            pts[type] += amount;
+            let max = (type === 'acess') ? 500 : (type === 'base' ? 800 : (type === 'infra' ? 1200 : 1500));
+            if (pts[type] > max) pts[type] = max;
+            document.getElementById('txt-' + type).innerText = `${pts[type]} / ${max}`;
+            document.getElementById('bar-' + type).style.width = `${(pts[type]/max)*100}%`;
+            document.getElementById(gameId).classList.remove('active');
+            alert(`Sucesso! +${amount} pontos computados!`);
+        }
+
+        function checkQuiz() {
+            let checked = document.querySelectorAll('.quiz-item input:checked').length;
+            if(checked >= 3) document.getElementById('btn-quiz').classList.add('visible');
+            else document.getElementById('btn-quiz').classList.remove('visible');
+        }
+
+        let navAtt = 0, navAct = true;
+        function playNav(cell, isHit) {
+            if(!navAct || cell.classList.contains('hit') || cell.classList.contains('miss')) return;
+            navAtt++;
+            if(isHit) {
+                cell.classList.add('hit'); navAct = false;
+                document.getElementById('naval-info').innerHTML = "<span style='color:#10b981'>Achou a mesa certa (B3)!</span>";
+                document.getElementById('btn-naval').classList.add('visible');
+            } else {
+                cell.classList.add('miss');
+                if(navAtt >= 4) { navAct = false; document.getElementById('naval-info').innerHTML = "<span style='color:#ef4444'>O documento sumiu para sempre.</span>"; } 
+                else { document.getElementById('naval-info').innerText = `Gaveta errada! Restam ${4 - navAtt} tentativas.`; }
+            }
+        }
+
+        function rollDice() {
+            const d = document.getElementById('dice-btn');
+            if(d.classList.contains('rolling')) return;
+            d.classList.add('rolling'); d.innerText = "⏳";
+            setTimeout(() => {
+                const res = Math.floor(Math.random() * 6) + 1;
+                d.innerText = res; d.classList.remove('rolling');
+                if(res <= 2) d.style.color = "#ef4444"; else if(res >= 5) d.style.color = "#10b981"; else d.style.color = "#f59e0b";
+            }, 500);
+        }
+
+        let tInt = null, tLeft = 120, isRun = false;
+        function toggleTimer() {
+            const btn = document.getElementById('timer-btn');
+            if(isRun) { clearInterval(tInt); isRun = false; btn.innerText = "Iniciar"; }
+            else {
+                isRun = true; btn.innerText = "Pausar";
+                tInt = setInterval(() => {
+                    if(tLeft > 0) { tLeft--; document.getElementById('timer-display').innerText = `${String(Math.floor(tLeft/60)).padStart(2,'0')}:${String(tLeft%60).padStart(2,'0')}`; } 
+                    else { clearInterval(tInt); isRun = false; btn.innerText = "Iniciar"; alert("Tempo Esgotado!"); }
+                }, 1000);
+            }
+        }
+        function resetTimer() { clearInterval(tInt); isRun = false; tLeft = 120; document.getElementById('timer-display').innerText = "02:00"; document.getElementById('timer-btn').innerText = "Iniciar"; }
+
+        const deck = [
+            { n: "Chico Toledo", r: "Teologia Libertação", h: "Unia as lideranças em Boa Vista.", s: "Ignora erro no Quiz." },
+            { n: "Seu Avelino", r: "Obras Práticas", h: "Recolhia cimento porta a porta.", s: "Vence a rodada de Mutirão." },
+            { n: "Lourival", r: "Associações", h: "Articulava as ligações da região.", s: "Revela B3 na Batalha." }
+        ];
+        function drawCard() {
+            if(deck.length === 0) return alert("Todas as cartas queimadas!");
+            const d = deck.splice(Math.floor(Math.random() * deck.length), 1)[0];
+            document.getElementById('card-name').innerText = d.n; document.getElementById('card-role').innerText = d.r;
+            document.getElementById('card-desc').innerText = d.h; document.getElementById('card-skill').innerText = "✨ " + d.s;
+            document.getElementById('deck-btn').style.display = 'none'; document.getElementById('drawn-card').style.display = 'block';
+        }
+        function hideCard() { document.getElementById('drawn-card').style.display = 'none'; document.getElementById('deck-btn').style.display = 'flex'; }
+    </script>
+</body>
+</html>
