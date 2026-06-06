@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma Viva Rita de Cássia - Completa</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/global.css" />
+    <link rel="stylesheet" href="css/mapa.css" />
+    <link rel="stylesheet" href="css/rpg.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-logo"><h1>A Conquista da Rita de Cássia</h1><span>Campinas-SP</span></div>
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('mapa-comemorativo', this)">🗺️ Mapa Comemorativo</button>
+            <button class="tab-btn" onclick="switchTab('modo-jogo', this)">🎮 Painel do Mestre</button>
+        </div>
+    </nav>
+
+    <div class="content-viewport">
+        
+        <div id="mapa-comemorativo" class="page-view active">
+            <div id="real-map"></div>
+
+            <div class="conquista-panel">
+                <h3 style="color:#fff; font-size:14px; margin-bottom:10px;">✍️ Adicione Sua Conquista</h3>
+                <div class="form-group"><label>Título da Vitória</label><input type="text" id="form-title" placeholder="Ex: Mutirão..."></div>
+                <div class="form-group"><label>Relato Histórico</label><textarea id="form-desc" rows="3" placeholder="Conte como a comunidade se uniu..."></textarea></div>
+                <button class="btn-submit" onclick="addUserConquista()">Fixar no Mapa</button>
+            </div>
+
+            <div id="conquista-modal" class="modal-overlay">
+                <div class="conquista-card-detail">
+                    <button class="modal-close" onclick="closeMapModal()">✕</button>
+                    <div class="carousel-container">
+                        <button class="carousel-btn btn-prev" onclick="moveCarousel(-1)">◀</button>
+                        <button class="carousel-btn btn-next" onclick="moveCarousel(1)">▶</button>
+                        <div class="carousel-track" id="carousel-track">
+                            <div class="carousel-slide">
+                                <div class="slide-placeholder-box"><span>🖼️ Imagem 1</span></div><span class="slide-caption" id="cap-1">Lâmina 1</span>
+                            </div>
+                            <div class="carousel-slide">
+                                <div class="slide-placeholder-box"><span>📷 Imagem 2</span></div><span class="slide-caption" id="cap-2">Lâmina 2</span>
+                            </div>
+                            <div class="carousel-slide">
+                                <div class="slide-placeholder-box"><span>📍 Imagem 3</span></div><span class="slide-caption" id="cap-3">Lâmina 3</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="detail-body">
+                        <h2 id="modal-title" class="detail-title">Título</h2>
+                        <div id="modal-meta" class="detail-meta">Categoria</div>
+                        <p id="modal-text" class="detail-text">Descrição</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="modo-jogo" class="page-view">
+            
+            <div class="rpg-sidebar">
+                <script src="js/main.js"></script>
+                <script src="js/mapa.js"></script>
+                <script src="js/rpg.js"></script>
+            const submitBtn = document.querySelector('.btn-submit');
+            const originalLabel = submitBtn.innerText;
+            const titulo = titleInput.value.trim();
+            const descricao = descInput.value.trim();
+
+            if(!titulo) return alert("Preencha o título!");
+            if(!descricao) return alert("Preencha o relato histórico!");
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Validando...";
+
+            try {
+                const response = await fetch('http://localhost:3000/api/validate-pin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        titulo,
+                        descricao
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.aprovado === true) {
+                    const center = map.getCenter();
+                    const iconU = L.divIcon({
+                        className: 'custom-pin',
+                        html: `<div class="pin-icon" style="background:#ea580c;"><i>U</i></div><div class="pin-pulse"></div>`,
+                        iconSize: [36, 36], iconAnchor: [18, 36]
+                    });
+
+                    L.marker([center.lat, center.lng], {icon: iconU})
+                        .addTo(map)
+                        .bindPopup(`<b>${titulo}</b><br>Contribuição do Usuário.`);
+
+                    titleInput.value = "";
+                    descInput.value = "";
+                    alert("Sua conquista foi validada e adicionada ao mapa!");
+                    return;
+                }
+
+                // AJUSTE: Forçando a exibição do motivo da IA, com fallback caso ela não retorne.
+                alert(`Rejeitado: ${data.motivo || 'A IA não especificou o motivo.'}`);
+                
+            } catch (error) {
+                alert('Erro ao conectar com o validador.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalLabel;
+            }
+        }
+
+        // --- 4. SCRIPTS DO RPG ---
+        function setPhase(num, btn) {
+            document.querySelectorAll('.btn-phase').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.story-phase').forEach(p => p.classList.remove('active'));
+            document.getElementById('phase-' + num).classList.add('active');
+            document.querySelectorAll('.game-interface').forEach(g => g.classList.remove('active'));
+        }
+
+        function openGame(type) {
+            document.querySelectorAll('.game-interface').forEach(g => g.classList.remove('active'));
+            document.getElementById('game-' + type).classList.add('active');
+            if(type === 'naval') { navAtt = 0; navAct = true; document.getElementById('naval-info').innerHTML="Encontrem o ofício em 4 tentativas."; document.querySelectorAll('.naval-cell').forEach(c => c.classList.remove('hit', 'miss')); document.getElementById('btn-naval').classList.remove('visible');}
+        }
+
+        let pts = { base: 0, infra: 0, docente: 0, acess: 0 };
+        function addPoints(type, amount, gameId) {
+            pts[type] += amount;
+            let max = (type === 'acess') ? 500 : (type === 'base' ? 800 : (type === 'infra' ? 1200 : 1500));
+            if (pts[type] > max) pts[type] = max;
+            document.getElementById('txt-' + type).innerText = `${pts[type]} / ${max}`;
+            document.getElementById('bar-' + type).style.width = `${(pts[type]/max)*100}%`;
+            document.getElementById(gameId).classList.remove('active');
+            alert(`Sucesso! +${amount} pontos computados!`);
+        }
+
+        function checkQuiz() {
+            let checked = document.querySelectorAll('.quiz-item input:checked').length;
+            if(checked >= 3) document.getElementById('btn-quiz').classList.add('visible');
+            else document.getElementById('btn-quiz').classList.remove('visible');
+        }
+
+        let navAtt = 0, navAct = true;
+        function playNav(cell, isHit) {
+            if(!navAct || cell.classList.contains('hit') || cell.classList.contains('miss')) return;
+            navAtt++;
+            if(isHit) {
+                cell.classList.add('hit'); navAct = false;
+                document.getElementById('naval-info').innerHTML = "<span style='color:#10b981'>Achou a mesa certa (B3)!</span>";
+                document.getElementById('btn-naval').classList.add('visible');
+            } else {
+                cell.classList.add('miss');
+                if(navAtt >= 4) { navAct = false; document.getElementById('naval-info').innerHTML = "<span style='color:#ef4444'>O documento sumiu para sempre.</span>"; } 
+                else { document.getElementById('naval-info').innerText = `Gaveta errada! Restam ${4 - navAtt} tentativas.`; }
+            }
+        }
+
+        function rollDice() {
+            const d = document.getElementById('dice-btn');
+            if(d.classList.contains('rolling')) return;
+            d.classList.add('rolling'); d.innerText = "⏳";
+            setTimeout(() => {
+                const res = Math.floor(Math.random() * 6) + 1;
+                d.innerText = res; d.classList.remove('rolling');
+                if(res <= 2) d.style.color = "#ef4444"; else if(res >= 5) d.style.color = "#10b981"; else d.style.color = "#f59e0b";
+            }, 500);
+        }
+
+        let tInt = null, tLeft = 120, isRun = false;
+        function toggleTimer() {
+            const btn = document.getElementById('timer-btn');
+            if(isRun) { clearInterval(tInt); isRun = false; btn.innerText = "Iniciar"; }
+            else {
+                isRun = true; btn.innerText = "Pausar";
+                tInt = setInterval(() => {
+                    if(tLeft > 0) { tLeft--; document.getElementById('timer-display').innerText = `${String(Math.floor(tLeft/60)).padStart(2,'0')}:${String(tLeft%60).padStart(2,'0')}`; } 
+                    else { clearInterval(tInt); isRun = false; btn.innerText = "Iniciar"; alert("Tempo Esgotado!"); }
+                }, 1000);
+            }
+        }
+        function resetTimer() { clearInterval(tInt); isRun = false; tLeft = 120; document.getElementById('timer-display').innerText = "02:00"; document.getElementById('timer-btn').innerText = "Iniciar"; }
+
+        const deck = [
+            { n: "Chico Toledo", r: "Teologia Libertação", h: "Unia as lideranças em Boa Vista.", s: "Ignora erro no Quiz." },
+            { n: "Seu Avelino", r: "Obras Práticas", h: "Recolhia cimento porta a porta.", s: "Vence a rodada de Mutirão." },
+            { n: "Lourival", r: "Associações", h: "Articulava as ligações da região.", s: "Revela B3 na Batalha." }
+        ];
+        function drawCard() {
+            if(deck.length === 0) return alert("Todas as cartas queimadas!");
+            const d = deck.splice(Math.floor(Math.random() * deck.length), 1)[0];
+            document.getElementById('card-name').innerText = d.n; document.getElementById('card-role').innerText = d.r;
+            document.getElementById('card-desc').innerText = d.h; document.getElementById('card-skill').innerText = "✨ " + d.s;
+            document.getElementById('deck-btn').style.display = 'none'; document.getElementById('drawn-card').style.display = 'block';
+        }
+        function hideCard() { document.getElementById('drawn-card').style.display = 'none'; document.getElementById('deck-btn').style.display = 'flex'; }
+    </script>
+</body>
+</html>''
