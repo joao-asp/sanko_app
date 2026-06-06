@@ -4,19 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SANKO - Resgatando Conquistas e Construindo o Futuro</title>
-
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Courier+Prime:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+    
     <link rel="stylesheet" href="css/style.css">
-    <script src="js/script.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
-
 <body>
+
     <nav>
         <div class="nav-logo">
             <h1>SANKO FA</h1>
@@ -134,7 +132,7 @@
                 
                 <div id="phase-4" class="story-phase">
                     <div class="phase-year">199X</div><div class="phase-title">4. A Desinformação</div>
-                    <div class="gm-speech">📢 "Boatos dizem que o terreno da escola foi vendido. O individualismo avança. Combatam as mentiras!"</div>
+                    <div class="gm-speech">📢 "Boatos dizem que o terrain da escola foi vendido. O individualismo avança. Combatam as mentiras!"</div>
                     <div class="mechanic-text">Mecânica: O mestre sorteia a rodada de desafio imediato.</div>
                     <button id="btn-concluir-4" class="btn-concluir-rodada" onclick="concluirRodada(4)">⭐ CONCLUIR RODADA 4 (+300 FORÇA) ⭐</button>
                 </div>
@@ -180,7 +178,7 @@
 
                     <div id="game-naval" class="game-interface">
                         <div class="game-panel-title">🚢 Onde Está o Ofício? (Radar)</div>
-                        <p style="font-family: var(--fonte-documento); font-weight: bold; margin-bottom:10px;" id="naval-info">Ache o ofício em 10 tentativas. <br><span style="color:var(--alerta-vermelho);">Vermelho = Frio.</span> <span style="color:#d97706;">Amarelo = Tá Quente!</span></p>
+                        <p style="font-family: var(--fonte-documento); font-weight: bold; margin-bottom:10px;" id="naval-info">Ache o ofício em 10 tentativas. <br><span style="color:var(--alerta-vermelho);');">Vermelho = Frio.</span> <span style="color:#d97706;">Amarelo = Tá Quente!</span></p>
                         <div class="naval-grid" id="naval-grid-container"></div>
                         <button class="btn-claim" id="btn-naval" onclick="addPoints('docente', 300, 'game-naval')">DOCUMENTO ACHADO (+300)</button>
                     </div>
@@ -230,5 +228,7 @@
             </div>
         </div>
     </div>
+
+    <script src="js/script.js"></script>
 </body>
 </html>
