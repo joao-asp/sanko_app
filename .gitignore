@@ -5,3 +5,4 @@ Thumbs.db
 
 # Se futuramente você for usar node, já deixa engatilhado
 node_modules/
+.env
