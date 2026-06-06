@@ -17,6 +17,218 @@
 </head>
 
 <body>
-    <!-- HTML content from sanko_final.html -->
+    <nav>
+        <div class="nav-logo">
+            <h1>SANKO FA</h1>
+            <span>RESGATANDO CONQUISTAS</span>
+        </div>
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('modo-jogo', this)">Painel do Mestre</button>
+            <button class="tab-btn" onclick="switchTab('mapa-comemorativo', this)">Mapa das Memórias</button>
+        </div>
+    </nav>
+
+    <div class="content-viewport">
+        <div id="mapa-comemorativo" class="page-view">
+            <div id="real-map"></div>
+            <div class="conquista-panel">
+                <h3 style="font-family: var(--fonte-manchete); font-size: 24px; margin-bottom: 10px; text-transform: uppercase;">Fixar Memória</h3>
+                <div class="form-group"><label>Título da Vitória</label><input type="text" id="form-title" placeholder="Ex: Mutirão..."></div>
+                <div class="form-group"><label>Relato Histórico</label><textarea id="form-desc" rows="3" placeholder="Conte como a comunidade se uniu..."></textarea></div>
+                <button class="btn-submit" onclick="addUserConquista()">CRAVAR NO MAPA</button>
+            </div>
+            
+            <div id="conquista-modal" class="modal-overlay">
+                <div class="conquista-card-detail">
+                    <button class="modal-close" onclick="closeMapModal()">X</button>
+                    <div class="carousel-container">
+                        <button class="carousel-btn btn-prev" onclick="moveCarousel(-1)">◀</button>
+                        <button class="carousel-btn btn-next" onclick="moveCarousel(1)">▶</button>
+                        <div class="carousel-track" id="carousel-track">
+                            <div class="carousel-slide"><div class="slide-placeholder-box"><span>FOTO 1</span></div><span class="slide-caption" id="cap-1">Lâmina 1</span></div>
+                            <div class="carousel-slide"><div class="slide-placeholder-box"><span>FOTO 2</span></div><span class="slide-caption" id="cap-2">Lâmina 2</span></div>
+                            <div class="carousel-slide"><div class="slide-placeholder-box"><span>FOTO 3</span></div><span class="slide-caption" id="cap-3">Lâmina 3</span></div>
+                        </div>
+                    </div>
+                    <div class="detail-body">
+                        <h2 id="modal-title" class="detail-title">Título</h2>
+                        <div id="modal-meta" class="detail-meta">Categoria</div>
+                        <p id="modal-text" class="detail-text">Descrição</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="modo-jogo" class="page-view active">
+            
+            <div class="rpg-sidebar">
+                <div class="rpg-stat-card">
+                    <div class="rpg-stat-label">Força Comunitária</div>
+                    <div id="rpg-fc" class="rpg-stat-val">1000</div>
+                </div>
+
+                <div class="frentes-container">
+                    <div style="font-family: var(--fonte-manchete); font-size: 16px; margin-bottom: 12px; text-transform: uppercase;">Demandas do Bairro</div>
+                    <div class="rpg-frente-box">
+                        <div class="rpg-frente-info"><span>Articulação</span><span id="txt-base">0 / 800</span></div>
+                        <div class="rpg-bar-bg"><div id="bar-base" class="rpg-bar-fill fill-red"></div></div>
+                    </div>
+                    <div class="rpg-frente-box">
+                        <div class="rpg-frente-info"><span>Infraestrutura</span><span id="txt-infra">0 / 1200</span></div>
+                        <div class="rpg-bar-bg"><div id="bar-infra" class="rpg-bar-fill fill-yellow"></div></div>
+                    </div>
+                    <div class="rpg-frente-box">
+                        <div class="rpg-frente-info"><span>Corpo Docente</span><span id="txt-docente">0 / 1500</span></div>
+                        <div class="rpg-bar-bg"><div id="bar-docente" class="rpg-bar-fill fill-red"></div></div>
+                    </div>
+                    <div class="rpg-frente-box">
+                        <div class="rpg-frente-info"><span>Acessibilidade</span><span id="txt-acess">0 / 500</span></div>
+                        <div class="rpg-bar-bg"><div id="bar-acess" class="rpg-bar-fill fill-yellow"></div></div>
+                    </div>
+                </div>
+
+                <div class="controls-row">
+                    <div class="module-box">
+                        <div class="module-title">Sorte / Crise</div>
+                        <div class="dice-btn" id="dice-btn" onclick="rollDice()">🎲</div>
+                    </div>
+                    <div class="module-box">
+                        <div class="module-title">Debate Geral</div>
+                        <div class="timer-val" id="timer-display">02:00</div>
+                        <button class="timer-btn" id="timer-btn" onclick="toggleTimer()">INICIAR</button>
+                        <button class="timer-btn timer-btn-reset" onclick="resetTimer()">ZERAR</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rpg-center-panel">
+                <div class="timeline-controls">
+                    <button id="btn-fase-1" class="btn-phase active" onclick="setPhase(1, this)">1. O Choque</button>
+                    <button id="btn-fase-2" class="btn-phase" onclick="setPhase(2, this)" disabled>2. Associações</button>
+                    <button id="btn-fase-3" class="btn-phase" onclick="setPhase(3, this)" disabled>3. O Ofício</button>
+                    <button id="btn-fase-4" class="btn-phase" onclick="setPhase(4, this)" disabled>4. Fake News</button>
+                    <button id="btn-fase-5" class="btn-phase" onclick="setPhase(5, this)" disabled>5. Mutirão</button>
+                    <button id="btn-fase-6" class="btn-phase" onclick="setPhase(6, this)" disabled>6. Vitória</button>
+                </div>
+
+                <div id="phase-1" class="story-phase active">
+                    <div class="phase-year">1992</div><div class="phase-title">1. O Choque de Realidade</div>
+                    <div class="gm-speech">📢 "O bairro cresceu. A escola Fazendinha bloqueou matrículas. O Estado quer enviar os jovens pro Rosolen! O que vamos fazer?"</div>
+                    <div class="mechanic-text">Mecânica: Debatam. Sorteie uma carta de minigame secreto abaixo. Se o tempo da carta esgotar, perdem 300 pontos comunitários!</div>
+                    <button id="btn-concluir-1" class="btn-concluir-rodada" onclick="concluirRodada(1)">⭐ CONCLUIR RODADA 1 (+300 FORÇA) ⭐</button>
+                </div>
+                
+                <div id="phase-2" class="story-phase">
+                    <div class="phase-year">1995</div><div class="phase-title">2. O Coletivo Horizontal</div>
+                    <div class="gm-speech">📢 "A revolta não basta. Vamos unir as 5 associações de moradores sob a Teologia da Libertação."</div>
+                    <div class="mechanic-text">Mecânica: Sorteie um minigame secreto. Cuidado com o cronômetro central.</div>
+                    <button id="btn-concluir-2" class="btn-concluir-rodada" onclick="concluirRodada(2)">⭐ CONCLUIR RODADA 2 (+300 FORÇA) ⭐</button>
+                </div>
+                
+                <div id="phase-3" class="story-phase">
+                    <div class="phase-year">1998</div><div class="phase-title">3. O Labirinto Burocrático</div>
+                    <div class="gm-speech">📢 "Fomos a SP de ônibus, mas o ofício sumiu nas gavetas da Secretaria da Educação!"</div>
+                    <div class="mechanic-text">Mecânica: Sorteie e vença o desafio oficial antes que o tempo esgote.</div>
+                    <button id="btn-concluir-3" class="btn-concluir-rodada" onclick="concluirRodada(3)">⭐ CONCLUIR RODADA 3 (+300 FORÇA) ⭐</button>
+                </div>
+                
+                <div id="phase-4" class="story-phase">
+                    <div class="phase-year">199X</div><div class="phase-title">4. A Desinformação</div>
+                    <div class="gm-speech">📢 "Boatos dizem que o terreno da escola foi vendido. O individualismo avança. Combatam as mentiras!"</div>
+                    <div class="mechanic-text">Mecânica: O mestre sorteia a rodada de desafio imediato.</div>
+                    <button id="btn-concluir-4" class="btn-concluir-rodada" onclick="concluirRodada(4)">⭐ CONCLUIR RODADA 4 (+300 FORÇA) ⭐</button>
+                </div>
+                
+                <div id="phase-5" class="story-phase">
+                    <div class="phase-year">1999</div><div class="phase-title">5. O Mutirão Físico</div>
+                    <div class="gm-speech">📢 "Sem verba da prefeitura, teremos que bater porta a porta por cimento e erguer as salas nós mesmos!"</div>
+                    <div class="mechanic-text">Mecânica: Mão na massa rápido! O relógio do minigame está correndo contra a comunidade.</div>
+                    <button id="btn-concluir-5" class="btn-concluir-rodada" onclick="concluirRodada(5)">⭐ CONCLUIR RODADA 5 (+300 FORÇA) ⭐</button>
+                </div>
+                
+                <div id="phase-6" class="story-phase">
+                    <div class="phase-year">2000</div><div class="phase-title">6. Os Professores</div>
+                    <div class="gm-speech">📢 "A escola está de pé! Mas o Estado recusa enviar professores se não mostrarmos força total."</div>
+                    <div class="mechanic-text">Mecânica: Se todas as demandas estiverem resolvidas e a Força resistir, a vitória é nossa!</div>
+                    <button id="btn-concluir-6" class="btn-concluir-rodada" onclick="alert('PARABÉNS! VOCÊS VENCERAM E CONSTRUÍRAM A ESCOLA RITA DE CÁSSIA!')">🏆 FINALIZAR PROJETO SANKO 🏆</button>
+                </div>
+
+                <div class="hub-title" style="margin-top: 30px;">Sorteio de Desafios (Cartas Não se Repetem)</div>
+                <div class="secret-hub-container">
+                    <p style="font-family: var(--fonte-documento); font-weight: bold; margin-bottom: 12px;">Sorteie o teste. O tempo correrá no centro da tela!</p>
+                    <button class="btn-roulette" id="btn-spin-main" onclick="drawMinigameCard()">SORTEAR CARTA DE MINIGAME</button>
+                </div>
+            </div>
+
+            <div class="minigame-modal-overlay" id="minigame-modal-overlay">
+                <div class="minigame-card-center">
+                    <button class="modal-close-x" onclick="surrenderChallenge()" title="Desistir do Desafio">X</button>
+
+                    <div class="central-timer" id="central-timer-display">02:00</div>
+                    <div class="central-timer-label">Tempo Restante (Penalidade: -300 Força)</div>
+                    
+                    <div id="game-quiz" class="game-interface">
+                        <div class="game-panel-title">🧠 O Povo Tem Memória? (Quiz)</div>
+                        <p style="font-family: var(--fonte-documento); font-weight: bold; margin-bottom:16px;">Mestre, assinale os acertos da equipe antes do fim do tempo.</p>
+                        <label class="quiz-item"><input type="checkbox" onchange="checkQuiz()"> 1. Erguidas em mutirões com doação de cimento.</label>
+                        <label class="quiz-item"><input type="checkbox" onchange="checkQuiz()"> 2. Bairros: São Jorge, Fazendinha, Sta Bárbara, Eulina, Boa Vista.</label>
+                        <label class="quiz-item"><input type="checkbox" onchange="checkQuiz()"> 3. Bloqueio do Aterro Sanitário por 20 dias.</label>
+                        <label class="quiz-item"><input type="checkbox" onchange="checkQuiz()"> 4. Fortalecidos pela Teologia da Libertação.</label>
+                        <label class="quiz-item"><input type="checkbox" onchange="checkQuiz()"> 5. Fretaram ônibus para a Secretaria em SP.</label>
+                        <button class="btn-claim" id="btn-quiz" onclick="addPoints('base', 300, 'game-quiz')">CONFIRMAR +300 ARTICULAÇÃO</button>
+                    </div>
+
+                    <div id="game-naval" class="game-interface">
+                        <div class="game-panel-title">🚢 Onde Está o Ofício? (Radar)</div>
+                        <p style="font-family: var(--fonte-documento); font-weight: bold; margin-bottom:10px;" id="naval-info">Ache o ofício em 10 tentativas. <br><span style="color:var(--alerta-vermelho);">Vermelho = Frio.</span> <span style="color:#d97706;">Amarelo = Tá Quente!</span></p>
+                        <div class="naval-grid" id="naval-grid-container"></div>
+                        <button class="btn-claim" id="btn-naval" onclick="addPoints('docente', 300, 'game-naval')">DOCUMENTO ACHADO (+300)</button>
+                    </div>
+
+                    <div id="game-imagem-acao" class="game-interface">
+                        <div class="game-panel-title">🎨 Imagem & Ação (Desenho/Mímica)</div>
+                        <p style="font-family: var(--fonte-documento); font-weight: bold; margin-bottom:8px;">Escolha entre <b>Desenhar</b> ou fazer <b>Mímica</b>. Sem falar! A equipe deve adivinhar.</p>
+                        <div class="challenge-box">Palavra Secreta: <span id="ia-target">Carregando...</span></div>
+                        <button class="btn-claim visible" id="btn-ia-submit" onclick="addPoints('infra', 300, 'game-imagem-acao')">PALAVRA DESCOBERTA (+300 INFRAESTRUTURA)</button>
+                    </div>
+
+                    <div id="game-mimica" class="game-interface">
+                        <div class="game-panel-title">🎭 Teatro de Rua (Apenas Mímica)</div>
+                        <p style="font-family: var(--fonte-documento); font-weight: bold; margin-bottom:8px;">Interprete a situação complexa abaixo APENAS com gestos. Proibido desenhar ou emitir sons!</p>
+                        <div class="challenge-box">Situação: <span id="mimica-target">Carregando...</span></div>
+                        <button class="btn-claim visible" id="btn-mimica-submit" onclick="addPoints('acess', 300, 'game-mimica')">SITUAÇÃO DECIFRADA (+300 ACESSIBILIDADE)</button>
+                    </div>
+
+                    <div id="game-telepatia" class="game-interface">
+                        <div class="game-panel-title">📡 Conexão Popular (Telepatia)</div>
+                        <p style="font-family: var(--fonte-documento); font-weight: bold; margin-bottom:8px;">Duas pessoas pensam em UMA PALAVRA relacionada ao tema sorteado. No 3, elas falam juntas. Têm que bater a mesma palavra!</p>
+                        <div class="challenge-box">Tema em Comum: <span id="telepatia-target">Carregando...</span></div>
+                        <button class="btn-claim visible" id="btn-telepatia-submit" onclick="addPoints('base', 300, 'game-telepatia')">SINTONIA PERFEITA (+300 ARTICULAÇÃO)</button>
+                    </div>
+
+                    <div id="game-memoria" class="game-interface">
+                        <div class="game-panel-title">🎴 Memória Viva (História e Minorias)</div>
+                        <p style="font-family: var(--fonte-documento); font-weight: bold; margin-bottom:8px;">Combine os pares. <br><b>Acertar 6 pares garante a vitória!</b> Se chegar em 5 pares, você pode usar o "X" para fazer uma retirada tática (desistir sem perder Força).</p>
+                        <div class="memory-grid" id="memory-grid"></div>
+                        <button class="btn-claim" id="btn-memoria" onclick="addPoints('docente', 300, 'game-memoria')">CONFIRMAR VITÓRIA NA MEMÓRIA (+300)</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rpg-right-panel">
+                <div style="font-family: var(--fonte-manchete); font-size: 24px; color: var(--tinta-preta); margin-bottom: 8px;">CARTAS DE ALIADOS</div>
+                <div style="font-size: 11px; font-weight:bold; color: #555; margin-bottom: 16px;">(RESGATE: Sorteie e Queime)</div>
+                <div class="deck-btn" id="deck-btn" onclick="drawCard()">PUXAR MEMÓRIA</div>
+                <div class="drawn-card" id="drawn-card">
+                    <div class="carimbo-queimado" id="carimbo-queimado">RESGATADO</div>
+                    <div class="char-role-badge" id="card-role">ROLE</div>
+                    <div class="char-name-display" id="card-name">NOME</div>
+                    <div class="char-history-display" id="card-desc">DESC</div>
+                    <div class="char-skill-display" id="card-skill">SKILL</div>
+                    <button class="btn-burn" onclick="burnCard()">RISCAR DO BARALHO</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
