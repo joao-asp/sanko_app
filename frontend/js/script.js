@@ -26,6 +26,7 @@ function setPhase(num, btn) {
 
 function concluirRodada(faseAtual) {
     currentFC += 300;
+    localStorage.setItem('sanko_fc', currentFC);
     document.getElementById('rpg-fc').innerText = currentFC;
 
     let currentBtn = document.getElementById('btn-concluir-' + faseAtual);
@@ -34,6 +35,11 @@ function concluirRodada(faseAtual) {
     alert(`✅ RODADA ${faseAtual} CONCLUÍDA!\nA comunidade superou esta etapa e ganhou +300 de Força Comunitária!`);
 
     let nextFase = faseAtual + 1;
+    if (faseAtual > faseMaxConcluida) {
+        faseMaxConcluida = faseAtual;
+        localStorage.setItem('sanko_fase_max', faseMaxConcluida);
+    }
+
     let nextPhaseBtn = document.getElementById('btn-fase-' + nextFase);
     if(nextPhaseBtn) {
         nextPhaseBtn.disabled = false;
@@ -42,7 +48,10 @@ function concluirRodada(faseAtual) {
 }
 
 // --- SISTEMA DE MINIGAMES ---
-let currentFC = 1000;
+let currentFC = parseInt(localStorage.getItem('sanko_fc')) || 1000;
+let pts = JSON.parse(localStorage.getItem('sanko_pts')) || { base: 0, infra: 0, docente: 0, acess: 0 };
+let faseMaxConcluida = parseInt(localStorage.getItem('sanko_fase_max')) || 0;
+
 let challengeTimerInterval = null;
 let challengeTimeLeft = 120; 
 let activeGameType = null;
@@ -50,7 +59,7 @@ let activeGameType = null;
 let availableGames = ['quiz', 'naval', 'imagem-acao', 'memoria', 'mimica', 'telepatia'];
 
 let bancoImagemAcao = [ "Revolta da Vacina", "João W. Nery", "Ailton Krenak", "Estação Cultura", "Dandara dos Palmares", "Maria da Penha", "Carlos Gomes", "Sônia Guajajara", "Teologia da Libertação" ];
-let bancoMimica = [ "Erguendo a school debaixo de chuva", "Protesto parando ônibus em Campinas", "Padre no megafone durante a missa campal", "Assinando ofício burocrático com raiva" ];
+let bancoMimica = [ "Erguendo a escola debaixo de chuva", "Protesto parando ônibus em Campinas", "Padre no megafone durante a missa campal", "Assinando ofício burocrático com raiva" ];
 let bancoTelepatia = [ "Resistência", "Escola", "Bairro", "Prefeitura", "Campinas", "Mutirão", "Educação" ];
 
 bancoImagemAcao.sort(() => Math.random() - 0.5);
@@ -147,6 +156,7 @@ function surrenderChallenge() {
         stopChallengeTimer();
         currentFC -= penalidade;
         if(currentFC < 0) currentFC = 0;
+        localStorage.setItem('sanko_fc', currentFC);
         document.getElementById('rpg-fc').innerText = currentFC;
         document.getElementById('minigame-modal-overlay').classList.remove('active');
         
@@ -161,7 +171,9 @@ function surrenderChallenge() {
 
 function challengeTimeoutFail() {
     stopChallengeTimer();
-    currentFC -= 300; if(currentFC < 0) currentFC = 0; document.getElementById('rpg-fc').innerText = currentFC;
+    currentFC -= 300; if(currentFC < 0) currentFC = 0;
+    localStorage.setItem('sanko_fc', currentFC);
+    document.getElementById('rpg-fc').innerText = currentFC;
     toggleGameInputs(activeGameType, false);
     document.getElementById('minigame-modal-overlay').classList.remove('active');
     
@@ -191,12 +203,14 @@ function toggleGameInputs(type, enable) {
     else if(type === 'naval') { navAct = enable; } 
 }
 
-let pts = { base: 0, infra: 0, docente: 0, acess: 0 };
 function addPoints(type, amount, gameId) {
     stopChallengeTimer();
     pts[type] += amount;
     let max = (type === 'acess') ? 500 : (type === 'base' ? 800 : (type === 'infra' ? 1200 : 1500));
     if (pts[type] > max) pts[type] = max;
+    
+    localStorage.setItem('sanko_pts', JSON.stringify(pts));
+    
     document.getElementById('txt-' + type).innerText = `${pts[type]} / ${max}`;
     document.getElementById('bar-' + type).style.width = `${(pts[type]/max)*100}%`;
     document.getElementById('minigame-modal-overlay').classList.remove('active');
@@ -224,6 +238,7 @@ function initMemoryGame() {
         grid.appendChild(cardEl);
     });
 }
+
 
 function flipMemoryCard(cardEl) {
     if (flippedCards.length >= 2 || cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
@@ -277,7 +292,9 @@ function playNav(cell, c, r) {
         if(navAtt >= 10) { 
             navAct = false; stopChallengeTimer();
             document.getElementById('naval-info').innerHTML = "<span style='color:var(--alerta-vermelho)'>O OFÍCIO FOI DESTRUÍDO.</span>"; 
-            currentFC -= 300; if(currentFC < 0) currentFC = 0; document.getElementById('rpg-fc').innerText = currentFC;
+            currentFC -= 300; if(currentFC < 0) currentFC = 0;
+            localStorage.setItem('sanko_fc', currentFC);
+            document.getElementById('rpg-fc').innerText = currentFC;
             document.getElementById('minigame-modal-overlay').classList.remove('active');
             alert("Gavetas trancadas e o tempo estourou! Erros custaram 300 de Força Comunitária.\n\nEste jogo foi perdido e descartado permanentemente.");
         }
@@ -328,3 +345,39 @@ function burnCard() {
     document.getElementById('carimbo-queimado').style.display = 'block';
     setTimeout(() => { document.getElementById('drawn-card').style.display = 'none'; document.getElementById('deck-btn').style.display = 'flex'; }, 800);
 }
+
+// --- FUNÇÃO PARA INICIALIZAR O ESTADO SALVO (F5) ---
+function inicializarEstadoSalvo() {
+    document.getElementById('rpg-fc').innerText = currentFC;
+    
+    let frentes = ['base', 'infra', 'docente', 'acess'];
+    frentes.forEach(type => {
+        let max = (type === 'acess') ? 500 : (type === 'base' ? 800 : (type === 'infra' ? 1200 : 1500));
+        document.getElementById('txt-' + type).innerText = `${pts[type]} / ${max}`;
+        document.getElementById('bar-' + type).style.width = `${(pts[type]/max)*100}%`;
+    });
+
+    for (let i = 2; i <= 6; i++) {
+        let btn = document.getElementById('btn-fase-' + i);
+        if (btn) {
+            btn.disabled = i > (faseMaxConcluida + 1);
+        }
+    }
+    
+    if (faseMaxConcluida > 0) {
+        let ultimaFaseAtiva = Math.min(faseMaxConcluida + 1, 6);
+        let btnFase = document.getElementById('btn-fase-' + ultimaFaseAtiva);
+        if (btnFase) setPhase(ultimaFaseAtiva, btnFase);
+    }
+}
+
+// --- FUNÇÃO DE RESET GLOBAL ---
+function resetCampanha() {
+    if(confirm("Tem certeza que deseja recomeçar toda a campanha? Isso apagará todos os pontos acumulados.")) {
+        localStorage.clear();
+        window.location.reload();
+    }
+}
+
+// Executa a inicialização dos dados assim que o script é carregado
+inicializarEstadoSalvo();
