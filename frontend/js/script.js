@@ -1,133 +1,222 @@
 let map;
-
-function toggleMenu() {
-    document.getElementById("mobileMenu").classList.toggle("open");
-    document.getElementById("menuOverlay").classList.toggle("open");
-}
-
-function closeMenu() {
-    document.getElementById("mobileMenu").classList.remove("open");
-    document.getElementById("menuOverlay").classList.remove("open");
-}
-
-function switchTabAndClose(tabId, button) {
-    switchTab(tabId, button);
-    closeMenu();
-}
-
 function initMap() {
     if(map) return;
     map = L.map('real-map').setView([-22.892, -47.120], 14);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; SANKO' }).addTo(map);
-    const createIcon = (l, c) => L.divIcon({ className: 'custom-pin', html: `<div class="pin-icon" style="background:${c};"><i>${l}</i></div><div class="pin-pulse"></div>`, iconSize: [36,36], iconAnchor: [18,36] });
-    L.marker([-22.890, -47.122], {icon: createIcon('E', 'var(--alerta-vermelho)')}).addTo(map);
+    
+    const createIcon = (l, c) => L.divIcon({ 
+        className: 'custom-pin', 
+        html: `<div class="pin-icon" style="background:${c};"><i>${l}</i></div><div class="pin-pulse"></div>`, 
+        iconSize: [36,36], 
+        iconAnchor: [18,36],
+        popupAnchor: [0, -40]
+    });
+    
+    const markerEscola = L.marker([-22.890, -47.122], {icon: createIcon('E', 'var(--alerta-vermelho)')}).addTo(map);
+
+    const popupContent = `
+        <div class="map-popup-neo">
+            <h4>Escola Rita de Cássia</h4>
+            <p>Erguida pelas mãos da comunidade. O marco zero da nossa resistência contra o esquecimento.</p>
+            <button class="neo-btn btn-black w-100 mt-10" style="padding: 10px; font-size: 14px;" onclick="iniciarJogoPeloMapa()">JOGAR ESTA HISTÓRIA</button>
+        </div>
+    `;
+    
+    markerEscola.bindPopup(popupContent);
+}
+
+function iniciarJogoPeloMapa() {
+    map.closePopup();
+    const btnMestre = document.querySelector('.nav-tabs .tab-btn');
+    if(btnMestre) {
+        btnMestre.click();
+    } else {
+        switchTab('modo-jogo');
+    }
+    showToast("Campanha Carregada: Escola Rita de Cássia", "success");
 }
 
 function switchTab(tabId, btn) {
     document.querySelectorAll('.page-view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
-    btn.classList.add('active');
+    if(btn) btn.classList.add('active');
     if(tabId === 'mapa-comemorativo') { if(!map) initMap(); setTimeout(() => map.invalidateSize(), 100); }
 }
 
-// --- SISTEMA DE FASES E CONCLUSÃO DE RODADA ---
-function setPhase(num, btn) {
-    if (btn.disabled) return; 
-    document.querySelectorAll('.btn-phase').forEach(b => b.classList.remove('active')); 
-    btn.classList.add('active');
-    document.querySelectorAll('.story-phase').forEach(p => p.classList.remove('active'));
-    document.getElementById('phase-' + num).classList.add('active');
+function toggleMenu() { document.getElementById('mobileMenu').classList.toggle('active'); document.getElementById('menuOverlay').classList.toggle('active'); }
+function closeMenu() { document.getElementById('mobileMenu').classList.remove('active'); document.getElementById('menuOverlay').classList.remove('active'); }
+function switchTabAndClose(tabId, btn) { switchTab(tabId, btn); closeMenu(); }
+
+function showToast(msg, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast-notification toast-${type}`;
+    toast.innerText = msg;
+    container.appendChild(toast);
+    setTimeout(() => { if(toast.parentNode) toast.parentNode.removeChild(toast); }, 4000);
 }
 
-function concluirRodada(faseAtual) {
-    currentFC += 300;
+let storedFase = localStorage.getItem('sanko_fase_max');
+let faseMaxConcluida = storedFase !== null ? parseInt(storedFase) : -1;
+let currentFC = parseInt(localStorage.getItem('sanko_fc')) || 0;
+
+function adjustFC(amount) {
+    currentFC += amount;
+    if(currentFC < 0) currentFC = 0;
     localStorage.setItem('sanko_fc', currentFC);
+    
+    const fcDisplay = document.getElementById('rpg-fc-display');
+    if(fcDisplay) fcDisplay.innerText = currentFC;
+    
+    if(amount > 0) showToast(`+${amount} Força Comunitária!`, 'success');
+    else showToast(`${amount} Força Comunitária!`, 'error');
+}
 
-    document.getElementById('rpg-fc').innerText = currentFC;
+function setPhase(num, btn) {
+    if (btn && btn.disabled) return; 
+    document.querySelectorAll('.neo-tab').forEach(b => b.classList.remove('active')); 
+    if(btn) btn.classList.add('active');
+    else {
+        let fallbackBtn = document.getElementById('btn-fase-' + num);
+        if(fallbackBtn) fallbackBtn.classList.add('active');
+    }
+    
+    document.querySelectorAll('.story-phase').forEach(p => p.classList.remove('active'));
+    let phaseDiv = document.getElementById('phase-' + num);
+    if(phaseDiv) phaseDiv.classList.add('active');
+}
 
-    const fcMobile = document.getElementById('rpg-fc-mobile');
-    if(fcMobile) fcMobile.innerText = currentFC;
-
-    let currentBtn = document.getElementById('btn-concluir-' + faseAtual);
-    if(currentBtn) currentBtn.style.display = 'none';
-
-    alert(`✅ RODADA ${faseAtual} CONCLUÍDA!\nA comunidade superou esta etapa e ganhou +300 de Força Comunitária!`);
-
+function concluirRodada(faseAtual, pontos = 300) {
+    if(pontos > 0) adjustFC(pontos);
+    
     let nextFase = faseAtual + 1;
     if (faseAtual > faseMaxConcluida) {
         faseMaxConcluida = faseAtual;
         localStorage.setItem('sanko_fase_max', faseMaxConcluida);
     }
-
-    let nextPhaseBtn = document.getElementById('btn-fase-' + nextFase);
-    if(nextPhaseBtn) {
-        nextPhaseBtn.disabled = false;
-        setPhase(nextFase, nextPhaseBtn);
-    }
-}
-
-// --- SISTEMA DE MINIGAMES ---
-let currentFC = parseInt(localStorage.getItem('sanko_fc')) || 1000;
-let pts = JSON.parse(localStorage.getItem('sanko_pts')) || { base: 0, infra: 0, docente: 0, acess: 0 };
-let faseMaxConcluida = parseInt(localStorage.getItem('sanko_fase_max')) || 0;
-
-let challengeTimerInterval = null;
-let challengeTimeLeft = 120; 
-let activeGameType = null;
-
-let availableGames = ['quiz', 'naval', 'imagem-acao', 'memoria', 'mimica', 'telepatia'];
-
-let bancoImagemAcao = [ "Revolta da Vacina", "João W. Nery", "Ailton Krenak", "Estação Cultura", "Dandara dos Palmares", "Maria da Penha", "Carlos Gomes", "Sônia Guajajara", "Teologia da Libertação" ];
-let bancoMimica = [ "Erguendo a escola debaixo de chuva", "Protesto parando ônibus em Campinas", "Padre no megafone durante a missa campal", "Assinando ofício burocrático com raiva" ];
-let bancoTelepatia = [ "Resistência", "Escola", "Bairro", "Prefeitura", "Campinas", "Mutirão", "Educação" ];
-
-bancoImagemAcao.sort(() => Math.random() - 0.5);
-bancoMimica.sort(() => Math.random() - 0.5);
-bancoTelepatia.sort(() => Math.random() - 0.5);
-
-let masterMemoryPairs = [
-    {id: 1, name: "Zumbi dos Palmares", desc: "Líder político e militar quilombola"},
-    {id: 2, name: "Machado de Assis", desc: "Maior nome da literatura e fundador da ABL"},
-    {id: 3, name: "Carolina Maria de Jesus", desc: "Escritora favelada autora de Quarto de Despejo"},
-    {id: 4, name: "Dandara dos Palmares", desc: "Guerreira negra que lutou contra a escravidão"},
-    {id: 5, name: "Luiz Gama", desc: "Advogado abolicionista"},
-    {id: 6, name: "Antonieta de Barros", desc: "Primeira deputada negra do Brasil"},
-    {id: 7, name: "João W. Nery", desc: "Pioneiro na luta pelos homens trans no Brasil"},
-    {id: 8, name: "Ailton Krenak", desc: "Líder indígena, ambientalista e imortal da ABL"},
-    {id: 9, name: "Madame Satã", desc: "Figura icônica da resistência LGBTQIAPN+"},
-    {id: 10, name: "Carlos Gomes", desc: "Compositor operístico nascido em Campinas"},
-    {id: 11, name: "Toninho do PT", desc: "Prefeito de Campinas assassinado"},
-    {id: 12, name: "Cacique Raoni", desc: "Líder Kayapó global na defesa da Amazônia"},
-    {id: 13, name: "Erika Hilton", desc: "Deputada federal trans brasileira"}
-];
-
-let navTargetObj = {c: 0, r: 0};
-function buildNavalGrid() {
-    const grid = document.getElementById('naval-grid-container');
-    grid.innerHTML = '';
-    const cols = ['A','B','C','D','E','F'];
     
-    let tCol = Math.floor(Math.random() * 6);
-    let tRow = Math.floor(Math.random() * 5) + 1; 
-    navTargetObj = { c: tCol, r: tRow };
-
-    for(let row = 1; row <= 5; row++) {
-        for(let c = 0; c < cols.length; c++) {
-            let cellName = cols[c] + row;
-            let div = document.createElement('div');
-            div.className = 'naval-cell';
-            div.innerText = cellName;
-            div.onclick = function() { playNav(this, c, row); };
-            grid.appendChild(div);
-        }
+    let nextPhaseBtn = document.getElementById('btn-fase-' + nextFase);
+    if(nextPhaseBtn) nextPhaseBtn.disabled = false;
+    
+    if (nextFase <= 6) {
+        setPhase(nextFase);
     }
 }
+
+// --- SINCRONIA DE CRONÔMETRO ---
+function syncTimers(source) {
+    if(source === 'main') {
+        const m = document.getElementById('timer-min').value;
+        const s = document.getElementById('timer-sec').value;
+        if(document.getElementById('modal-timer-min')) document.getElementById('modal-timer-min').value = m;
+        if(document.getElementById('modal-timer-sec')) document.getElementById('modal-timer-sec').value = s;
+    } else {
+        const m = document.getElementById('modal-timer-min').value;
+        const s = document.getElementById('modal-timer-sec').value;
+        if(document.getElementById('timer-min')) document.getElementById('timer-min').value = m;
+        if(document.getElementById('timer-sec')) document.getElementById('timer-sec').value = s;
+    }
+}
+
+let tInt = null, isRun = false, totalSecs = 0;
+
+function toggleTimer() {
+    const btnMain = document.getElementById('timer-btn');
+    const btnModal = document.getElementById('modal-timer-btn');
+    const containerInputs = document.getElementById('timer-inputs-container');
+    const containerInputsModal = document.getElementById('modal-timer-inputs-container');
+    const displayMain = document.getElementById('master-timer-display');
+    const displayModal = document.getElementById('modal-timer-display');
+
+    if(isRun) { 
+        clearInterval(tInt); 
+        isRun = false; 
+        btnMain.innerText = "RETOMAR"; 
+        if(btnModal) btnModal.innerText = "RETOMAR";
+        
+        containerInputs.style.display = 'flex';
+        if(containerInputsModal) containerInputsModal.style.display = 'flex';
+        displayMain.style.display = 'none';
+        if(displayModal) displayModal.style.display = 'none';
+        
+        let mStr = String(Math.floor(totalSecs / 60)).padStart(2, '0');
+        let sStr = String(totalSecs % 60).padStart(2, '0');
+        
+        document.getElementById('timer-min').value = mStr;
+        document.getElementById('timer-sec').value = sStr;
+        if(document.getElementById('modal-timer-min')) document.getElementById('modal-timer-min').value = mStr;
+        if(document.getElementById('modal-timer-sec')) document.getElementById('modal-timer-sec').value = sStr;
+    } else {
+        totalSecs = (parseInt(document.getElementById('timer-min').value) || 0) * 60 + (parseInt(document.getElementById('timer-sec').value) || 0);
+        if(totalSecs <= 0) { showToast("Defina um tempo maior que zero.", "error"); return; }
+        
+        isRun = true; 
+        btnMain.innerText = "PAUSAR";
+        if(btnModal) btnModal.innerText = "PAUSAR";
+        
+        containerInputs.style.display = 'none';
+        if(containerInputsModal) containerInputsModal.style.display = 'none';
+        displayMain.style.display = 'block';
+        if(displayModal) displayModal.style.display = 'block';
+        
+        updateTimerDisplay();
+        tInt = setInterval(() => {
+            if(totalSecs > 0) { 
+                totalSecs--; 
+                updateTimerDisplay(); 
+            } else { 
+                clearInterval(tInt); 
+                isRun = false; 
+                btnMain.innerText = "INICIAR"; 
+                if(btnModal) btnModal.innerText = "INICIAR";
+                showToast("O TEMPO ACABOU!", "error"); 
+            }
+        }, 1000);
+    }
+}
+
+function resetTimer() { 
+    clearInterval(tInt); 
+    isRun = false; 
+    document.getElementById('timer-btn').innerText = "INICIAR"; 
+    if(document.getElementById('modal-timer-btn')) document.getElementById('modal-timer-btn').innerText = "INICIAR";
+    
+    document.getElementById('timer-inputs-container').style.display = 'flex';
+    if(document.getElementById('modal-timer-inputs-container')) document.getElementById('modal-timer-inputs-container').style.display = 'flex';
+    document.getElementById('master-timer-display').style.display = 'none';
+    if(document.getElementById('modal-timer-display')) document.getElementById('modal-timer-display').style.display = 'none';
+    
+    document.getElementById('timer-min').value = "02";
+    document.getElementById('timer-sec').value = "00";
+    if(document.getElementById('modal-timer-min')) document.getElementById('modal-timer-min').value = "02";
+    if(document.getElementById('modal-timer-sec')) document.getElementById('modal-timer-sec').value = "00";
+    
+    document.getElementById('master-timer-display').innerText = "02:00";
+    if(document.getElementById('modal-timer-display')) document.getElementById('modal-timer-display').innerText = "02:00";
+}
+
+function updateTimerDisplay() {
+    let m = String(Math.floor(totalSecs / 60)).padStart(2, '0');
+    let s = String(totalSecs % 60).padStart(2, '0');
+    let timeStr = `${m}:${s}`;
+    
+    document.getElementById('master-timer-display').innerText = timeStr;
+    if(document.getElementById('modal-timer-display')) document.getElementById('modal-timer-display').innerText = timeStr;
+}
+
+// --- MINIGAMES ---
+let activeGameType = null;
+let availableGames = ['quiz', 'naval', 'quem-sou-eu', 'codigo', 'memoria'];
+
+let bancoQuemSouEu = [ "Padre da Teologia da Libertação", "Prefeito de Campinas", "Carolina Maria de Jesus", "Ailton Krenak", "Diretora da Escola" ];
+let bancoCodigos = [ "MUTIRAO", "OFICIO", "RESISTENCIA", "ASSOCIACOES", "EDUCACAO" ];
+bancoQuemSouEu.sort(() => Math.random() - 0.5);
+bancoCodigos.sort(() => Math.random() - 0.5);
 
 function drawMinigameCard() {
-    stopChallengeTimer();
     if(availableGames.length === 0) { 
-        alert("⚠️ TODOS OS MINIGAMES JÁ FORAM JOGADOS NESTA SESSÃO! O baralho de desafios esgotou.");
+        showToast("⚠️ TODOS OS MINIGAMES JÁ FORAM JOGADOS NESTA SESSÃO!", "error");
         return;
     }
     const randomIndex = Math.floor(Math.random() * availableGames.length);
@@ -138,125 +227,93 @@ function drawMinigameCard() {
 function setupAndOpenGame(type) {
     activeGameType = type;
     document.querySelectorAll('.game-interface').forEach(g => g.classList.remove('active'));
-    document.getElementById('game-' + type).classList.add('active');
+    
+    const gameEl = document.getElementById('game-' + type);
+    if(gameEl) gameEl.classList.add('active');
+    
     document.getElementById('minigame-modal-overlay').classList.add('active');
-    toggleGameInputs(type, true);
 
     if(type === 'naval') {
-        navAtt = 0; navAct = true;
-        document.getElementById('naval-info').innerHTML="Ache o ofício em 10 tentativas. <br><span style='color:var(--alerta-vermelho);'>Vermelho = Frio.</span> <span style='color:#d97706;'>Amarelo = Tá Quente!</span>";
         buildNavalGrid();
-        document.getElementById('btn-naval').classList.remove('visible');
-    } else if (type === 'imagem-acao') {
-        let p = bancoImagemAcao.pop() || "Revolta da Vacina";
-        document.getElementById('ia-target').innerText = p;
-    } else if (type === 'mimica') {
-        let m = bancoMimica.pop() || "Assinando ofício burocrático com raiva";
-        document.getElementById('mimica-target').innerText = m;
-    } else if (type === 'telepatia') {
-        let t = bancoTelepatia.pop() || "Trabalho Coletivo";
-        document.getElementById('telepatia-target').innerText = t;
+    } else if (type === 'quem-sou-eu') {
+        document.getElementById('qse-target').innerText = bancoQuemSouEu.pop() || "Trabalhador Voluntário";
+    } else if (type === 'codigo') {
+        document.getElementById('codigo-resposta').innerText = bancoCodigos.pop() || "FAZENDINHA";
     } else if (type === 'memoria') {
-        initMemoryGame();
+        document.getElementById('memoria-escolha').style.display = 'flex';
+        document.getElementById('memoria-arena').style.display = 'none';
+        document.getElementById('memoria-fisico-arena').style.display = 'none';
     }
+}
 
-    startChallengeTimer();
+function iniciarMemoria(modo) {
+    document.getElementById('memoria-escolha').style.display = 'none';
+    if (modo === 'digital') {
+        document.getElementById('memoria-arena').style.display = 'block';
+        initMemoryGame();
+    } else {
+        document.getElementById('memoria-fisico-arena').style.display = 'block';
+    }
+}
+
+function cancelarMinigame() {
+    activeGameType = null;
+    document.getElementById('minigame-modal-overlay').classList.remove('active');
+    resetTimer();
 }
 
 function surrenderChallenge() {
-    let msg = "Tem certeza que deseja desistir do desafio?\n\nIsso custará 300 de Força Comunitária e este minigame NÃO poderá ser jogado novamente!";
-    let penalidade = 300;
+    adjustFC(-50);
+    cancelarMinigame();
+}
 
-    if (activeGameType === 'memoria' && matchedPairs >= 5) {
-        msg = "Como vocês já acertaram 5 pares, a desistência agora NÃO custará pontos de Força Comunitária.\n\nDeseja realizar a retirada tática?";
-        penalidade = 0;
-    }
+function addPoints(amount) {
+    adjustFC(amount);
+    cancelarMinigame();
+}
 
-    if(confirm(msg)) {
-        stopChallengeTimer();
-        currentFC -= penalidade;
-        if(currentFC < 0) currentFC = 0;
+let navTargetObj = {c: 0, r: 0};
+function buildNavalGrid() {
+    const grid = document.getElementById('naval-grid-container');
+    grid.innerHTML = '';
+    const cols = ['A','B','C','D','E','F'];
+    navTargetObj = { c: Math.floor(Math.random() * 6), r: Math.floor(Math.random() * 5) + 1 };
 
-        localStorage.setItem('sanko_fc', currentFC);
-
-        document.getElementById('rpg-fc').innerText = currentFC;
-
-        const fcMobile = document.getElementById('rpg-fc-mobile');
-        if(fcMobile) fcMobile.innerText = currentFC;
-
-        document.getElementById('minigame-modal-overlay').classList.remove('active');
-
-        if (penalidade === 0) {
-            alert("🏳️ Desistência Tática! Como vocês já acertaram 5 pares, não perderam Força Comunitária.\n\nEste jogo foi descartado permanentemente.");
-        } else {
-            alert("🏳️ A equipe DESISTIU do desafio! Penalidade: -300 de Força Comunitária.\n\nEste jogo foi descartado permanentemente. Passe para o próximo minigame no botão de sorteio.");
+    for(let row = 1; row <= 5; row++) {
+        for(let c = 0; c < cols.length; c++) {
+            let div = document.createElement('div');
+            div.className = 'naval-cell neo-btn btn-white';
+            div.innerText = cols[c] + row;
+            div.onclick = function() { 
+                if(c === navTargetObj.c && row === navTargetObj.r) {
+                    this.classList.add('hit');
+                    this.style.background = 'var(--cor-acerto-verde)';
+                    this.style.color = 'white';
+                    showToast("Encontraram o ofício!", "success");
+                    document.getElementById('btn-naval').classList.add('visible');
+                } else {
+                    this.classList.add('miss');
+                    this.style.background = 'var(--alerta-vermelho)';
+                    this.style.color = 'white';
+                }
+            };
+            grid.appendChild(div);
         }
-
-        if(currentFC <= 0) alert("💀 ATENÇÃO MESTRE: A Força Comunitária zerou!");
     }
+    document.getElementById('btn-naval').classList.remove('visible');
 }
 
-function challengeTimeoutFail() {
-    stopChallengeTimer();
-
-    currentFC -= 300;
-    if(currentFC < 0) currentFC = 0;
-
-    localStorage.setItem('sanko_fc', currentFC);
-
-    document.getElementById('rpg-fc').innerText = currentFC;
-
-    const fcMobile = document.getElementById('rpg-fc-mobile');
-    if(fcMobile) fcMobile.innerText = currentFC;
-
-    toggleGameInputs(activeGameType, false);
-    document.getElementById('minigame-modal-overlay').classList.remove('active');
-
-    alert("🚨 O TEMPO ESGOTOU! Vocês PERDERAM 300 de Força Comunitária!\n\nEste jogo foi perdido e descartado permanentemente. Passe para o próximo minigame no botão de sorteio.");
-
-    if(currentFC <= 0) alert("💀 ATENÇÃO MESTRE: A Força Comunitária zerou!");
-}
-
-function startChallengeTimer() {
-    challengeTimeLeft = 120;
-    updateChallengeTimerDisplay();
-    challengeTimerInterval = setInterval(() => {
-        challengeTimeLeft--;
-        updateChallengeTimerDisplay();
-        if(challengeTimeLeft <= 0) challengeTimeoutFail();
-    }, 1000);
-}
-
-function stopChallengeTimer() { clearInterval(challengeTimerInterval); }
-function updateChallengeTimerDisplay() {
-    let m = String(Math.floor(challengeTimeLeft / 60)).padStart(2, '0');
-    let s = String(challengeTimeLeft % 60).padStart(2, '0');
-    document.getElementById('central-timer-display').innerText = `${m}:${s}`;
-}
-
-function toggleGameInputs(type, enable) {
-    if(type === 'quiz') { document.querySelectorAll('.quiz-item input').forEach(i => i.disabled = !enable); } 
-    else if(type === 'naval') { navAct = enable; } 
-}
-
-function addPoints(type, amount, gameId) {
-    stopChallengeTimer();
-    pts[type] += amount;
-    let max = (type === 'acess') ? 500 : (type === 'base' ? 800 : (type === 'infra' ? 1200 : 1500));
-    if (pts[type] > max) pts[type] = max;
-    
-    localStorage.setItem('sanko_pts', JSON.stringify(pts));
-    
-    document.getElementById('txt-' + type).innerText = `${pts[type]} / ${max}`;
-    document.getElementById('bar-' + type).style.width = `${(pts[type]/max)*100}%`;
-    document.getElementById('minigame-modal-overlay').classList.remove('active');
-    alert(`CARTA SUPERADA: Desafio concluído a tempo! +${amount} pontos na demanda.`);
-}
-
+let masterMemoryPairs = [
+    {id: 1, name: "Zumbi dos Palmares", desc: "Líder quilombola"},
+    {id: 2, name: "Dandara", desc: "Guerreira negra"},
+    {id: 3, name: "Carolina Maria", desc: "Escritora favelada"},
+    {id: 4, name: "Ailton Krenak", desc: "Líder indígena"}
+];
 let memoryCards = [], flippedCards = [], matchedPairs = 0;
+
 function initMemoryGame() {
     memoryCards = [];
-    let shuffledMaster = [...masterMemoryPairs].sort(() => Math.random() - 0.5).slice(0, 10);
+    let shuffledMaster = [...masterMemoryPairs].sort(() => Math.random() - 0.5);
     shuffledMaster.forEach(p => {
         memoryCards.push({ id: p.id, text: p.name });
         memoryCards.push({ id: p.id, text: p.desc });
@@ -266,15 +323,15 @@ function initMemoryGame() {
     grid.innerHTML = '';
     matchedPairs = 0; flippedCards = [];
     document.getElementById('btn-memoria').classList.remove('visible');
+    
     memoryCards.forEach((card) => {
         const cardEl = document.createElement('div');
-        cardEl.className = 'memory-card'; cardEl.dataset.id = card.id;
-        cardEl.innerHTML = `<div class="memory-card-inner"><div class="memory-card-front">SANKO</div><div class="memory-card-back">${card.text}</div></div>`;
+        cardEl.className = 'memory-card neo-card'; cardEl.dataset.id = card.id;
+        cardEl.innerHTML = `<div class="memory-card-inner"><div class="memory-card-front bg-black text-yellow">SANKO</div><div class="memory-card-back bg-white">${card.text}</div></div>`;
         cardEl.onclick = () => flipMemoryCard(cardEl);
         grid.appendChild(cardEl);
     });
 }
-
 
 function flipMemoryCard(cardEl) {
     if (flippedCards.length >= 2 || cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
@@ -286,182 +343,61 @@ function flipMemoryCard(cardEl) {
             card1.classList.add('matched'); card2.classList.add('matched'); 
             matchedPairs++; 
             flippedCards = [];
-            
-            if (matchedPairs >= 6) { 
-                let btn = document.getElementById('btn-memoria');
-                btn.classList.add('visible'); 
-                btn.innerText = "VITÓRIA (" + matchedPairs + " PARES ACERTADOS) +300!";
+            if(matchedPairs === masterMemoryPairs.length) {
+                document.getElementById('btn-memoria').classList.add('visible');
             }
         } else { 
-            setTimeout(() => { card1.classList.remove('flipped'); card2.classList.remove('flipped'); flippedCards = []; }, 1000); 
+            setTimeout(() => { 
+                card1.classList.remove('flipped'); 
+                card2.classList.remove('flipped'); 
+                flippedCards = []; 
+            }, 3000); 
         }
     }
 }
 
-function checkQuiz() {
-    let checked = document.querySelectorAll('.quiz-item input:checked').length;
-    if(checked >= 3 && challengeTimeLeft > 0) document.getElementById('btn-quiz').classList.add('visible');
-    else document.getElementById('btn-quiz').classList.remove('visible');
-}
-
-let navAtt = 0, navAct = true;
-
-function playNav(cell, c, r) {
-    if(!navAct || cell.classList.contains('hit') || cell.classList.contains('miss') || cell.classList.contains('close') || challengeTimeLeft <= 0) return;
-    navAtt++;
-    
-    if(c === navTargetObj.c && r === navTargetObj.r) {
-        cell.classList.add('hit'); navAct = false;
-        document.getElementById('naval-info').innerHTML = "<span style='color:var(--cor-acerto-verde)'>GABARITO LOCALIZADO!</span>";
-        document.getElementById('btn-naval').classList.add('visible');
-    } else {
-        let dist = Math.max(Math.abs(c - navTargetObj.c), Math.abs(r - navTargetObj.r));
+// --- CARREGAMENTO DINÂMICO DE FASES ---
+async function carregarFases() {
+    try {
+        const resposta = await fetch('fases.json');
+        const fases = await resposta.json();
+        const container = document.getElementById('fases-container');
         
-        if (dist === 1) {
-            cell.classList.add('close');
-            document.getElementById('naval-info').innerHTML = `Aviso: <span style='color:#d97706;'>TÁ QUENTE! (Adjacente)</span> Restam ${10 - navAtt} tentativas.`;
-        } else {
-            cell.classList.add('miss');
-            document.getElementById('naval-info').innerHTML = `Aviso: <span style='color:var(--alerta-vermelho);'>FRIO! (Longe)</span> Restam ${10 - navAtt} tentativas.`;
-        }
+        container.innerHTML = ''; 
+        
+        fases.forEach((fase, index) => {
+            const div = document.createElement('div');
+            div.id = `phase-${fase.id}`;
+            div.className = `story-phase neo-card p-20 mt-15 ${index === 0 ? 'active' : ''}`;
+            
+            // O texto da mecânica foi totalmente apagado desta geração
+            div.innerHTML = `
+                <div class="phase-year">${fase.ano}</div>
+                <div class="phase-title">${fase.titulo}</div>
+                <div class="gm-speech">📢 <i>${fase.narrativa}</i></div>
+                <button id="btn-concluir-${fase.id}" class="neo-btn btn-yellow w-100 mt-20" style="padding: 18px; font-size: 24px;" onclick="${fase.botao_acao}">${fase.botao_texto}</button>
+            `;
+            container.appendChild(div);
+        });
+        
+        const initialFcDisplay = document.getElementById('rpg-fc-display');
+        if(initialFcDisplay) initialFcDisplay.innerText = currentFC;
 
-        if(navAtt >= 10) { 
-            navAct = false; stopChallengeTimer();
-            document.getElementById('naval-info').innerHTML = "<span style='color:var(--alerta-vermelho)'>O OFÍCIO FOI DESTRUÍDO.</span>"; 
-            currentFC -= 300; if(currentFC < 0) currentFC = 0;
-            localStorage.setItem('sanko_fc', currentFC);
-            document.getElementById('rpg-fc').innerText = currentFC;
-            document.getElementById('minigame-modal-overlay').classList.remove('active');
-            alert("Gavetas trancadas e o tempo estourou! Erros custaram 300 de Força Comunitária.\n\nEste jogo foi perdido e descartado permanentemente.");
-        }
-    }
-}
-
-function rollDice() {
-    const d = document.getElementById('dice-btn');
-    if(d.classList.contains('rolling')) return;
-    d.classList.add('rolling'); d.innerText = "?";
-    setTimeout(() => {
-        const res = Math.floor(Math.random() * 6) + 1;
-        d.innerText = res; d.classList.remove('rolling');
-        if(res <= 2) {d.style.background = "var(--alerta-vermelho)"; d.style.color = "white";} 
-        else if(res >= 5) {d.style.background = "var(--tinta-preta)"; d.style.color = "var(--destaque-amarelo)";} 
-        else {d.style.background = "var(--destaque-amarelo)"; d.style.color = "var(--tinta-preta)";}
-    }, 500);
-}
-
-let tInt = null, tLeft = 120, isRun = false;
-function toggleTimer() {
-    const btn = document.getElementById('timer-btn');
-
-    if(isRun) {
-        clearInterval(tInt);
-        isRun = false;
-        btn.innerText = "INICIAR";
-    }
-    else {
-        isRun = true;
-        btn.innerText = "PAUSAR";
-
-        tInt = setInterval(() => {
-
-            if(tLeft > 0) {
-
-                tLeft--;
-
-                const tempo =
-                    `${String(Math.floor(tLeft/60)).padStart(2,'0')}:${String(tLeft%60).padStart(2,'0')}`;
-
-                document.getElementById('timer-display').innerText = tempo;
-
-                const timerMobile = document.getElementById('timer-display-mobile');
-                if(timerMobile) timerMobile.innerText = tempo;
-
+        // Desbloqueia as abas corretas baseadas no progresso salvo
+        for (let i = 1; i <= 6; i++) {
+            let btn = document.getElementById('btn-fase-' + i);
+            if (btn) {
+                if (i <= faseMaxConcluida + 1) btn.disabled = false;
+                else btn.disabled = true;
             }
-            else {
-
-                clearInterval(tInt);
-                isRun = false;
-                btn.innerText = "INICIAR";
-
-                alert("O PRAZO DO DEBATE ACABOU!");
-
-            }
-
-        }, 1000);
-    }
-}
-
-function resetTimer() {
-    clearInterval(tInt);
-    isRun = false;
-    tLeft = 120;
-
-    document.getElementById('timer-display').innerText = "02:00";
-
-    const timerMobile = document.getElementById('timer-display-mobile');
-    if(timerMobile) timerMobile.innerText = "02:00";
-
-    document.getElementById('timer-btn').innerText = "INICIAR";
-}
-
-const deck = [
-    { n: "Chico Toledo", r: "Igreja / Base", h: "Motor da Teologia da Libertação.", s: "Use para ignorar erro no Quiz." },
-    { n: "Seu Avelino", r: "Obras Práticas", h: "Ergueu as salas de aula na marra.", s: "Vence a rodada de Mutirão físico." },
-    { n: "Lourival", r: "Política", h: "Unificava as associações de bairro.", s: "Acha a gaveta na Batalha Naval." }
-];
-function drawCard() {
-    if(deck.length === 0) return alert("TODAS AS MEMÓRIAS FORAM RESGATADAS!");
-    const d = deck.splice(Math.floor(Math.random() * deck.length), 1)[0];
-    document.getElementById('card-name').innerText = d.n; document.getElementById('card-role').innerText = d.r;
-    document.getElementById('card-desc').innerText = d.h; document.getElementById('card-skill').innerText = "VANTAGEM: " + d.s;
-    document.getElementById('carimbo-queimado').style.display = 'none';
-    document.getElementById('deck-btn').style.display = 'none'; document.getElementById('drawn-card').style.display = 'block';
-}
-function burnCard() { 
-    document.getElementById('carimbo-queimado').style.display = 'block';
-    setTimeout(() => { document.getElementById('drawn-card').style.display = 'none'; document.getElementById('deck-btn').style.display = 'flex'; }, 800);
-}
-
-// --- FUNÇÃO PARA INICIALIZAR O ESTADO SALVO (F5) ---
-function inicializarEstadoSalvo() {
-
-    document.getElementById('rpg-fc').innerText = currentFC;
-
-    const fcMobile = document.getElementById('rpg-fc-mobile');
-    if(fcMobile) fcMobile.innerText = currentFC;
-
-    let frentes = ['base', 'infra', 'docente', 'acess'];
-
-    frentes.forEach(type => {
-        let max = (type === 'acess') ? 500 : (type === 'base' ? 800 : (type === 'infra' ? 1200 : 1500));
-        document.getElementById('txt-' + type).innerText = `${pts[type]} / ${max}`;
-        document.getElementById('bar-' + type).style.width = `${(pts[type]/max)*100}%`;
-    });
-
-    for (let i = 2; i <= 6; i++) {
-        let btn = document.getElementById('btn-fase-' + i);
-
-        if (btn) {
-            btn.disabled = i > (faseMaxConcluida + 1);
         }
-    }
+        
+        // Define a fase inicial na tela
+        let faseAtiva = Math.max(0, Math.min(faseMaxConcluida + 1, 6));
+        setPhase(faseAtiva);
 
-    if (faseMaxConcluida > 0) {
-        let ultimaFaseAtiva = Math.min(faseMaxConcluida + 1, 6);
-        let btnFase = document.getElementById('btn-fase-' + ultimaFaseAtiva);
-
-        if (btnFase) setPhase(ultimaFaseAtiva, btnFase);
-    }
-}
-
-// --- FUNÇÃO DE RESET GLOBAL ---
-function resetCampanha() {
-    if(confirm("Tem certeza que deseja recomeçar toda a campanha? Isso apagará todos os pontos acumulados.")) {
-        localStorage.clear();
-        window.location.reload();
+    } catch (erro) {
+        console.error("Erro ao carregar fases.json.", erro);
     }
 }
-
-// Executa a inicialização dos dados assim que o script é carregado
-inicializarEstadoSalvo();
+carregarFases();
