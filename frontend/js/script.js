@@ -1,4 +1,20 @@
 let map;
+
+function toggleMenu() {
+    document.getElementById("mobileMenu").classList.toggle("open");
+    document.getElementById("menuOverlay").classList.toggle("open");
+}
+
+function closeMenu() {
+    document.getElementById("mobileMenu").classList.remove("open");
+    document.getElementById("menuOverlay").classList.remove("open");
+}
+
+function switchTabAndClose(tabId, button) {
+    switchTab(tabId, button);
+    closeMenu();
+}
+
 function initMap() {
     if(map) return;
     map = L.map('real-map').setView([-22.892, -47.120], 14);

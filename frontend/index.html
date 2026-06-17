@@ -20,11 +20,35 @@
             <h1>SANKO FA</h1>
             <span>RESGATANDO CONQUISTAS</span>
         </div>
+
+        <button class="hamburger" onclick="toggleMenu()">
+            ☰
+        </button>
+
         <div class="nav-tabs">
-            <button class="tab-btn active" onclick="switchTab('modo-jogo', this)">Painel do Mestre</button>
-            <button class="tab-btn" onclick="switchTab('mapa-comemorativo', this)">Mapa das Memórias</button>
+            <button class="tab-btn active" onclick="switchTab('modo-jogo', this)">
+                Painel do Mestre
+            </button>
+
+            <button class="tab-btn" onclick="switchTab('mapa-comemorativo', this)">
+                Mapa das Memórias
+            </button>
         </div>
     </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="tab-btn active"
+            onclick="switchTabAndClose('modo-jogo', this)">
+            Painel do Mestre
+        </button>
+
+        <button class="tab-btn"
+            onclick="switchTabAndClose('mapa-comemorativo', this)">
+            Mapa das Memórias
+        </button>
+    </div>
+
+    <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
 
     <div class="content-viewport">
         <div id="mapa-comemorativo" class="page-view">
