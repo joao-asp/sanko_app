@@ -14,7 +14,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body { 
-    background-color: var(--papel-fundo); 
+    background-color: var(--papel-fundo);  
     color: var(--tinta-preta); 
     display: flex; 
     flex-direction: column; 
@@ -148,7 +148,7 @@ nav {
 
 .btn-red { background: var(--alerta-vermelho); color: white; }
 .btn-yellow { background: var(--destaque-amarelo); color: var(--tinta-preta); }
-.btn-black { background: var(--tinta-preta); color: white; }
+.btn-black { background: var(--alerta-vermelho); color: white; }
 .btn-white { background: white; color: var(--tinta-preta); }
 .btn-black-yellow { background: var(--tinta-preta); color: var(--destaque-amarelo); border-color: var(--destaque-amarelo); }
 .btn-square { width: 60px; height: 60px; font-size: 40px; display: flex; align-items: center; justify-content: center; }
@@ -177,11 +177,11 @@ nav {
 .minigame-card-center { width: 850px; max-width: 95%; max-height: 95vh; overflow-y: auto; }
 
 .game-interface { display: none; }
-.game-interface.active { display: block; animation: fadeIn 0.3s; }
+.game-interface.active { display: block; animation: fadeIn 0.3s; padding: 20px; }
 .game-panel-title { font-family: var(--fonte-manchete); font-size: 32px; color: var(--alerta-vermelho); margin-bottom: 12px; text-transform: uppercase;}
 
 .btn-claim { display: none; }
-.btn-claim.visible { display: block; }
+.btn-claim.visible { display: block; background: var(--alerta-vermelho); }
 
 .quiz-item { background: #e0e0e0; padding: 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; border: 2px solid var(--tinta-preta); cursor: pointer; font-size: 14px; font-weight: bold;}
 .naval-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; max-width: 450px; margin: 20px auto; }
@@ -272,4 +272,30 @@ nav {
     .neo-timeline { padding-bottom: 10px; }
     .phase-title { font-size: 32px; max-width: 100%; margin-top: 40px;}
     .phase-year { top: -20px; right: 20px; }
+}
+
+@media(max-width: 480px) {
+    #timer-minigame-mobile {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .btn-iniciar {
+        width: 100%;
+    }
+
+    .btn-zerar {
+        width: 100%;
+    }
+
+    .btn-desistir {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: auto;
+        width: 90%;
+    }
 }

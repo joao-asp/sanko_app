@@ -155,18 +155,18 @@
                     <!-- CABEÇALHO DO DESAFIO -->
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--tinta-preta); padding-bottom: 20px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
                         
-                        <div style="display: flex; align-items: center; gap: 15px; background: var(--papel-fundo); padding: 15px; border: 4px solid var(--tinta-preta); box-shadow: 4px 4px 0 var(--tinta-preta);">
+                        <div id="timer-minigame-mobile" style="display: flex; align-items: center; gap: 15px; background: var(--papel-fundo); padding: 15px; border: 4px solid var(--tinta-preta); box-shadow: 4px 4px 0 var(--tinta-preta);">
                             <div class="timer-inputs" id="modal-timer-inputs-container">
                                 <input type="number" id="modal-timer-min" value="02" min="0" max="59" aria-label="Minutos" oninput="syncTimers('modal')">
                                 <span style="font-family: var(--fonte-manchete); font-size: 32px;">:</span>
                                 <input type="number" id="modal-timer-sec" value="00" min="0" max="59" aria-label="Segundos" oninput="syncTimers('modal')">
                             </div>
                             <div class="timer-display" id="modal-timer-display" style="display:none; font-size: 50px; margin: 0 10px;">02:00</div>
-                            <button class="neo-btn btn-black" id="modal-timer-btn" onclick="toggleTimer()">INICIAR</button>
-                            <button class="neo-btn btn-white" onclick="resetTimer()">ZERAR</button>
+                            <button class="neo-btn btn-black btn-iniciar" id="modal-timer-btn" onclick="toggleTimer()">INICIAR</button>
+                            <button class="neo-btn btn-white btn-zerar" onclick="resetTimer()">ZERAR</button>
                         </div>
 
-                        <button class="neo-btn btn-red" onclick="surrenderChallenge()" title="Desistir do Desafio" style="padding: 15px 30px; font-size: 22px;">X DESISTIR (-50)</button>
+                        <button class="neo-btn btn-red btn-desistir" onclick="surrenderChallenge()" title="Desistir do Desafio" style="padding: 15px 30px; font-size: 22px;">X DESISTIR (-50)</button>
                     </div>
 
                     <div id="game-quiz" class="game-interface">
