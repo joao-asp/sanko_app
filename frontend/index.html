@@ -51,9 +51,10 @@
             
             <!-- PAINEL FIXAR MEMÓRIA -->
             <div class="conquista-panel neo-card p-20" style="background: var(--destaque-amarelo);">
-                <h3 style="font-family: var(--fonte-manchete); font-size: 24px; margin-bottom: 10px; text-transform: uppercase;">Fixar Memória</h3>
-                <div class="form-group"><label>Título da Vitória</label><input type="text" id="form-title" placeholder="Ex: Mutirão..."></div>
-                <div class="form-group"><label>Relato Histórico</label><textarea id="form-desc" rows="3" placeholder="Conte como a comunidade se uniu..."></textarea></div>
+                <h3 style="font-family: var(--fonte-manchete); font-size: 24px; margin-bottom: 5px; text-transform: uppercase;">Fixar Memória</h3>
+                <p style="font-family: var(--fonte-documento); font-size: 12px; font-weight: bold; margin-bottom: 12px; color: var(--alerta-vermelho);">1º Clique em um local do mapa</p>
+                <div class="form-group"><label>2º Título da Vitória</label><input type="text" id="form-title" placeholder="Ex: Mutirão..."></div>
+                <div class="form-group"><label>3º Relato Histórico</label><textarea id="form-desc" rows="3" placeholder="Conte como a comunidade se uniu..."></textarea></div>
                 <button class="neo-btn btn-black w-100 mt-10" onclick="addUserConquista()">CRAVAR NO MAPA</button>
             </div>
             
@@ -65,9 +66,28 @@
                         <button class="carousel-btn btn-prev" onclick="moveCarousel(-1)">◀</button>
                         <button class="carousel-btn btn-next" onclick="moveCarousel(1)">▶</button>
                         <div class="carousel-track" id="carousel-track">
-                            <div class="carousel-slide"><div class="slide-placeholder-box"><span>FOTO 1</span></div><span class="slide-caption" id="cap-1">Lâmina 1</span></div>
-                            <div class="carousel-slide"><div class="slide-placeholder-box"><span>FOTO 2</span></div><span class="slide-caption" id="cap-2">Lâmina 2</span></div>
-                            <div class="carousel-slide"><div class="slide-placeholder-box"><span>FOTO 3</span></div><span class="slide-caption" id="cap-3">Lâmina 3</span></div>
+                            
+                            <!-- SLIDE 1 -->
+                            <div class="carousel-slide" style="background: var(--alerta-vermelho); display: flex; align-items: center; justify-content: center;">
+                                <img src="assets/foto1.jpg" onerror="this.style.display='none'" style="width: 100%; height: 100%; object-fit: cover;">
+                                <span style="position: absolute; font-family: var(--fonte-manchete); font-size: 30px; color: white; opacity: 0.5; z-index: 1; pointer-events: none;">REGISTRO 01</span>
+                                <span class="slide-caption" id="cap-1">Lâmina 1</span>
+                            </div>
+                            
+                            <!-- SLIDE 2 -->
+                            <div class="carousel-slide" style="background: var(--cor-acerto-verde); display: flex; align-items: center; justify-content: center;">
+                                <img src="assets/foto2.jpg" onerror="this.style.display='none'" style="width: 100%; height: 100%; object-fit: cover;">
+                                <span style="position: absolute; font-family: var(--fonte-manchete); font-size: 30px; color: white; opacity: 0.5; z-index: 1; pointer-events: none;">REGISTRO 02</span>
+                                <span class="slide-caption" id="cap-2">Lâmina 2</span>
+                            </div>
+                            
+                            <!-- SLIDE 3 -->
+                            <div class="carousel-slide" style="background: var(--tinta-preta); display: flex; align-items: center; justify-content: center;">
+                                <img src="assets/foto3.jpg" onerror="this.style.display='none'" style="width: 100%; height: 100%; object-fit: cover;">
+                                <span style="position: absolute; font-family: var(--fonte-manchete); font-size: 30px; color: white; opacity: 0.5; z-index: 1; pointer-events: none;">REGISTRO 03</span>
+                                <span class="slide-caption" id="cap-3">Lâmina 3</span>
+                            </div>
+
                         </div>
                     </div>
                     <div class="detail-body">

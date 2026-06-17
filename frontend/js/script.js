@@ -1,4 +1,6 @@
 let map;
+let marcadorTemporario = null;
+let localSelecionado = null;
 
 // --- SISTEMA DO MAPA E SALVAMENTO LOCAL ---
 function initMap() {
@@ -25,6 +27,22 @@ function initMap() {
     `;
     markerEscola.bindPopup(popupContent);
 
+    // SISTEMA DE SELECIONAR LOCAL COM CLIQUE
+    map.on('click', function(e) {
+        localSelecionado = e.latlng;
+        if(marcadorTemporario) {
+            marcadorTemporario.setLatLng(localSelecionado);
+        } else {
+            // Cria um marcador preto temporário
+            const tempIcon = L.divIcon({
+                className: 'custom-pin',
+                html: `<div class="pin-icon" style="background:var(--tinta-preta); border: 3px solid white; display: flex; align-items: center; justify-content: center;"><div style="width:12px; height:12px; background:white; border-radius:50%; transform: rotate(45deg);"></div></div>`,
+                iconSize: [36,36], iconAnchor: [18,36]
+            });
+            marcadorTemporario = L.marker(localSelecionado, {icon: tempIcon}).addTo(map);
+        }
+    });
+
     carregarMemoriasSalvas();
 }
 
@@ -32,16 +50,28 @@ function addUserConquista() {
     const title = document.getElementById('form-title').value.trim();
     const desc = document.getElementById('form-desc').value.trim();
 
+    if(!localSelecionado) {
+        showToast("Primeiro, clique no mapa para escolher o local!", "error");
+        return;
+    }
+
     if(!title || !desc) {
         showToast("Preencha o título e a história!", "error");
         return;
     }
 
-    const center = map.getCenter();
-    const lat = center.lat + (Math.random() - 0.5) * 0.008;
-    const lng = center.lng + (Math.random() - 0.5) * 0.008;
+    // CORES SORTIDAS NEO-BRUTALISTAS
+    const cores = ['#ffd500', '#d90429', '#2b9348', '#3a86ff', '#ff006e', '#00bbf9'];
+    const corSorteada = cores[Math.floor(Math.random() * cores.length)];
 
-    const novaMemoria = { id: Date.now(), title, desc, lat, lng };
+    const novaMemoria = { 
+        id: Date.now(), 
+        title, 
+        desc, 
+        lat: localSelecionado.lat, 
+        lng: localSelecionado.lng,
+        cor: corSorteada
+    };
 
     let salvas = JSON.parse(localStorage.getItem('sanko_memorias')) || [];
     salvas.push(novaMemoria);
@@ -49,8 +79,14 @@ function addUserConquista() {
 
     adicionarPinDeMemoria(novaMemoria);
 
+    // Limpa o formulário e o marcador temporário
     document.getElementById('form-title').value = '';
     document.getElementById('form-desc').value = '';
+    if(marcadorTemporario) {
+        map.removeLayer(marcadorTemporario);
+        marcadorTemporario = null;
+        localSelecionado = null;
+    }
     showToast("Memória cravada no mapa!", "success");
 }
 
@@ -60,9 +96,12 @@ function carregarMemoriasSalvas() {
 }
 
 function adicionarPinDeMemoria(memoria) {
+    let corPin = memoria.cor || '#ffd500'; // Fallback se já tiver pins antigos
+
     const createIconMemoria = () => L.divIcon({ 
         className: 'custom-pin', 
-        html: `<div class="pin-icon" style="background:var(--destaque-amarelo); border: 3px solid var(--tinta-preta);"><i style="color:var(--tinta-preta);">!</i></div><div class="pin-pulse" style="background: rgba(255,213,0,0.5);"></div>`, 
+        // BOLINHA NO MEIO EM VEZ DE EXCLAMAÇÃO
+        html: `<div class="pin-icon" style="background:${corPin}; border: 3px solid var(--tinta-preta); display: flex; align-items: center; justify-content: center;"><div style="width:12px; height:12px; background:var(--tinta-preta); border-radius:50%; transform: rotate(45deg);"></div></div><div class="pin-pulse" style="background: ${corPin}; opacity: 0.5;"></div>`, 
         iconSize: [36,36], 
         iconAnchor: [18,36]
     });
@@ -74,12 +113,17 @@ function adicionarPinDeMemoria(memoria) {
     });
 }
 
-// --- CONTROLE DO MODAL DE MEMÓRIAS (CARROSSEL) ---
+// --- CONTROLE DO MODAL DE MEMÓRIAS E CARROSSEL ---
 function abrirModalMemoria(titulo, desc) {
     document.getElementById('modal-title').innerText = titulo;
     document.getElementById('modal-text').innerText = desc;
     document.getElementById('modal-meta').innerText = "Relato da Comunidade";
     document.getElementById('conquista-modal').classList.add('active');
+    
+    // Reseta carrossel para a primeira foto
+    currentSlide = 0;
+    const track = document.getElementById('carousel-track');
+    if(track) track.style.transform = `translateX(0)`;
 }
 
 function closeMapModal() {
