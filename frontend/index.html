@@ -89,7 +89,7 @@
                     <div id="rpg-fc" class="rpg-stat-val">1000</div>
                 </div>
 
-                <div class="frentes-container">
+                <!-- <div class="frentes-container">
                     <div style="font-family: var(--fonte-manchete); font-size: 16px; margin-bottom: 12px; text-transform: uppercase;">Demandas do Bairro</div>
                     <div class="rpg-frente-box">
                         <div class="rpg-frente-info"><span>Articulação</span><span id="txt-base">0 / 800</span></div>
@@ -107,13 +107,13 @@
                         <div class="rpg-frente-info"><span>Acessibilidade</span><span id="txt-acess">0 / 500</span></div>
                         <div class="rpg-bar-bg"><div id="bar-acess" class="rpg-bar-fill fill-yellow"></div></div>
                     </div>
-                </div>
+                </div> -->
 
                 <div class="controls-row">
-                    <div class="module-box">
+                    <!-- <div class="module-box">
                         <div class="module-title">Sorte / Crise</div>
                         <div class="dice-btn" id="dice-btn" onclick="rollDice()">🎲</div>
-                    </div>
+                    </div> -->
                     <div class="module-box">
                         <div class="module-title">Debate Geral</div>
                         <div class="timer-val" id="timer-display">02:00</div>
@@ -131,6 +131,20 @@
                     <button id="btn-fase-4" class="btn-phase" onclick="setPhase(4, this)" disabled>4. Fake News</button>
                     <button id="btn-fase-5" class="btn-phase" onclick="setPhase(5, this)" disabled>5. Mutirão</button>
                     <button id="btn-fase-6" class="btn-phase" onclick="setPhase(6, this)" disabled>6. Vitória</button>
+                </div>
+
+                <div class="rpg-stat-card-mobile">
+                    <div class="rpg-stat-label">Força Comunitária</div>
+                    <div id="rpg-fc-mobile" class="rpg-stat-val">1000</div>
+                </div>
+
+                <div class="module-box-mobile">
+                    <div class="debate_container">
+                        <div class="module-title">Debate Geral</div>
+                        <div class="timer-val" id="timer-display-mobile">02:00</div>
+                    </div>
+                    <button class="timer-btn" id="timer-btn-mobile" onclick="toggleTimer()">INICIAR</button>
+                    <button class="timer-btn timer-btn-reset" onclick="resetTimer()">ZERAR</button>
                 </div>
 
                 <div id="phase-1" class="story-phase active">
@@ -237,7 +251,7 @@
                 </div>
             </div>
 
-            <div class="rpg-right-panel">
+            <!-- <div class="rpg-right-panel">
                 <div style="font-family: var(--fonte-manchete); font-size: 24px; color: var(--tinta-preta); margin-bottom: 8px;">CARTAS DE ALIADOS</div>
                 <div style="font-size: 11px; font-weight:bold; color: #555; margin-bottom: 16px;">(RESGATE: Sorteie e Queime)</div>
                 <div class="deck-btn" id="deck-btn" onclick="drawCard()">PUXAR MEMÓRIA</div>
@@ -249,7 +263,7 @@
                     <div class="char-skill-display" id="card-skill">SKILL</div>
                     <button class="btn-burn" onclick="burnCard()">RISCAR DO BARALHO</button>
                 </div>
-            </div>
+            </div> -->
         </div>
     </div>
 

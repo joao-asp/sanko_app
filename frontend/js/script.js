@@ -43,7 +43,11 @@ function setPhase(num, btn) {
 function concluirRodada(faseAtual) {
     currentFC += 300;
     localStorage.setItem('sanko_fc', currentFC);
+
     document.getElementById('rpg-fc').innerText = currentFC;
+
+    const fcMobile = document.getElementById('rpg-fc-mobile');
+    if(fcMobile) fcMobile.innerText = currentFC;
 
     let currentBtn = document.getElementById('btn-concluir-' + faseAtual);
     if(currentBtn) currentBtn.style.display = 'none';
@@ -59,7 +63,7 @@ function concluirRodada(faseAtual) {
     let nextPhaseBtn = document.getElementById('btn-fase-' + nextFase);
     if(nextPhaseBtn) {
         nextPhaseBtn.disabled = false;
-        setPhase(nextFase, nextPhaseBtn); 
+        setPhase(nextFase, nextPhaseBtn);
     }
 }
 
@@ -172,28 +176,44 @@ function surrenderChallenge() {
         stopChallengeTimer();
         currentFC -= penalidade;
         if(currentFC < 0) currentFC = 0;
+
         localStorage.setItem('sanko_fc', currentFC);
+
         document.getElementById('rpg-fc').innerText = currentFC;
+
+        const fcMobile = document.getElementById('rpg-fc-mobile');
+        if(fcMobile) fcMobile.innerText = currentFC;
+
         document.getElementById('minigame-modal-overlay').classList.remove('active');
-        
+
         if (penalidade === 0) {
-            alert("🏳️ Desistência Tática! Como acertaram 5 pares, vocês não perderam Força Comunitária.\n\nEste jogo foi descartado permanentemente.");
+            alert("🏳️ Desistência Tática! Como vocês já acertaram 5 pares, não perderam Força Comunitária.\n\nEste jogo foi descartado permanentemente.");
         } else {
             alert("🏳️ A equipe DESISTIU do desafio! Penalidade: -300 de Força Comunitária.\n\nEste jogo foi descartado permanentemente. Passe para o próximo minigame no botão de sorteio.");
         }
+
         if(currentFC <= 0) alert("💀 ATENÇÃO MESTRE: A Força Comunitária zerou!");
     }
 }
 
 function challengeTimeoutFail() {
     stopChallengeTimer();
-    currentFC -= 300; if(currentFC < 0) currentFC = 0;
+
+    currentFC -= 300;
+    if(currentFC < 0) currentFC = 0;
+
     localStorage.setItem('sanko_fc', currentFC);
+
     document.getElementById('rpg-fc').innerText = currentFC;
+
+    const fcMobile = document.getElementById('rpg-fc-mobile');
+    if(fcMobile) fcMobile.innerText = currentFC;
+
     toggleGameInputs(activeGameType, false);
     document.getElementById('minigame-modal-overlay').classList.remove('active');
-    
+
     alert("🚨 O TEMPO ESGOTOU! Vocês PERDERAM 300 de Força Comunitária!\n\nEste jogo foi perdido e descartado permanentemente. Passe para o próximo minigame no botão de sorteio.");
+
     if(currentFC <= 0) alert("💀 ATENÇÃO MESTRE: A Força Comunitária zerou!");
 }
 
@@ -333,16 +353,57 @@ function rollDice() {
 let tInt = null, tLeft = 120, isRun = false;
 function toggleTimer() {
     const btn = document.getElementById('timer-btn');
-    if(isRun) { clearInterval(tInt); isRun = false; btn.innerText = "INICIAR"; }
+
+    if(isRun) {
+        clearInterval(tInt);
+        isRun = false;
+        btn.innerText = "INICIAR";
+    }
     else {
-        isRun = true; btn.innerText = "PAUSAR";
+        isRun = true;
+        btn.innerText = "PAUSAR";
+
         tInt = setInterval(() => {
-            if(tLeft > 0) { tLeft--; document.getElementById('timer-display').innerText = `${String(Math.floor(tLeft/60)).padStart(2,'0')}:${String(tLeft%60).padStart(2,'0')}`; } 
-            else { clearInterval(tInt); isRun = false; btn.innerText = "INICIAR"; alert("O PRAZO DO DEBATE ACABOU!"); }
+
+            if(tLeft > 0) {
+
+                tLeft--;
+
+                const tempo =
+                    `${String(Math.floor(tLeft/60)).padStart(2,'0')}:${String(tLeft%60).padStart(2,'0')}`;
+
+                document.getElementById('timer-display').innerText = tempo;
+
+                const timerMobile = document.getElementById('timer-display-mobile');
+                if(timerMobile) timerMobile.innerText = tempo;
+
+            }
+            else {
+
+                clearInterval(tInt);
+                isRun = false;
+                btn.innerText = "INICIAR";
+
+                alert("O PRAZO DO DEBATE ACABOU!");
+
+            }
+
         }, 1000);
     }
 }
-function resetTimer() { clearInterval(tInt); isRun = false; tLeft = 120; document.getElementById('timer-display').innerText = "02:00"; document.getElementById('timer-btn').innerText = "INICIAR"; }
+
+function resetTimer() {
+    clearInterval(tInt);
+    isRun = false;
+    tLeft = 120;
+
+    document.getElementById('timer-display').innerText = "02:00";
+
+    const timerMobile = document.getElementById('timer-display-mobile');
+    if(timerMobile) timerMobile.innerText = "02:00";
+
+    document.getElementById('timer-btn').innerText = "INICIAR";
+}
 
 const deck = [
     { n: "Chico Toledo", r: "Igreja / Base", h: "Motor da Teologia da Libertação.", s: "Use para ignorar erro no Quiz." },
@@ -364,9 +425,14 @@ function burnCard() {
 
 // --- FUNÇÃO PARA INICIALIZAR O ESTADO SALVO (F5) ---
 function inicializarEstadoSalvo() {
+
     document.getElementById('rpg-fc').innerText = currentFC;
-    
+
+    const fcMobile = document.getElementById('rpg-fc-mobile');
+    if(fcMobile) fcMobile.innerText = currentFC;
+
     let frentes = ['base', 'infra', 'docente', 'acess'];
+
     frentes.forEach(type => {
         let max = (type === 'acess') ? 500 : (type === 'base' ? 800 : (type === 'infra' ? 1200 : 1500));
         document.getElementById('txt-' + type).innerText = `${pts[type]} / ${max}`;
@@ -375,14 +441,16 @@ function inicializarEstadoSalvo() {
 
     for (let i = 2; i <= 6; i++) {
         let btn = document.getElementById('btn-fase-' + i);
+
         if (btn) {
             btn.disabled = i > (faseMaxConcluida + 1);
         }
     }
-    
+
     if (faseMaxConcluida > 0) {
         let ultimaFaseAtiva = Math.min(faseMaxConcluida + 1, 6);
         let btnFase = document.getElementById('btn-fase-' + ultimaFaseAtiva);
+
         if (btnFase) setPhase(ultimaFaseAtiva, btnFase);
     }
 }

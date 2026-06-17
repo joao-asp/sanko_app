@@ -244,6 +244,14 @@ nav {
     visibility: visible;
 }
 
+.module-box-mobile {
+    display: none;
+}
+
+.rpg-stat-card-mobile {
+    display: none;
+}
+
 /* Mobile */
 @media(max-width: 480px) {
     .conquista-panel { 
@@ -262,4 +270,42 @@ nav {
         font-size: 18px;
     }
 
+    .rpg-sidebar { 
+        width: 180px; 
+    }
+
+    .module-box {
+        display: none;
+    }
+
+    .rpg-sidebar {
+        display: none;
+    }
+
+    .module-box-mobile { 
+        display: flex;
+        background: white; 
+        border: 4px solid var(--tinta-preta); 
+        padding: 16px; text-align: center; 
+        flex: 1; 
+        box-shadow: 4px 4px 0 var(--tinta-preta); 
+        color: var(--tinta-preta); 
+        margin: 10px 0px;
+    }
+
+    .debate_container {
+        padding-right: 10px;
+    }
+
+    .rpg-stat-card-mobile { 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        background: var(--tinta-preta); 
+        color: var(--destaque-amarelo); 
+        border: 4px solid var(--tinta-preta); 
+        padding: 16px; 
+        text-align: center; 
+    }
 }
