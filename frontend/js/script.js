@@ -113,6 +113,13 @@ function adicionarPinDeMemoria(memoria) {
     });
 }
 
+function limparMapa() {
+    if(confirm("Tem certeza que deseja apagar TODAS as memórias do mapa?")) {
+        localStorage.removeItem('sanko_memorias');
+        window.location.reload();
+    }
+}
+
 // --- CONTROLE DO MODAL DE MEMÓRIAS E CARROSSEL ---
 function abrirModalMemoria(titulo, desc) {
     document.getElementById('modal-title').innerText = titulo;
@@ -189,6 +196,7 @@ let storedFase = localStorage.getItem('sanko_fase_max');
 let faseMaxConcluida = storedFase !== null ? parseInt(storedFase) : -1;
 let currentFC = parseInt(localStorage.getItem('sanko_fc')) || 0;
 let faseAtual = 0;
+let totalFasesCount = 6;
 
 function adjustFC(amount) {
     currentFC += amount;
@@ -203,14 +211,13 @@ function adjustFC(amount) {
 }
 
 function atualizarBarraProgresso(faseAtualizada) {
-    const totalFases = 6;
-    const porcentagem = (faseAtualizada / totalFases) * 100;
+    const porcentagem = (faseAtualizada / totalFasesCount) * 100;
 
     const fill = document.getElementById("progress-fill");
     if(fill) fill.style.width = porcentagem + "%";
 
     const label = document.getElementById("current-phase-label");
-    if(label) label.innerText = `Fase ${faseAtualizada} de ${totalFases}`;
+    if(label) label.innerText = `Fase ${faseAtualizada} de ${totalFasesCount}`;
 
     const percent = document.getElementById("progress-percent");
     if(percent) percent.innerText = `${Math.round(porcentagem)}%`;
@@ -228,7 +235,7 @@ function atualizarBotoesNavegacao() {
     if (faseMaxConcluida === -1) {
         ultimaFaseAlcancada = 0;
     } else {
-        ultimaFaseAlcancada = Math.min(faseMaxConcluida + 1, 6);
+        ultimaFaseAlcancada = Math.min(faseMaxConcluida + 1, totalFasesCount);
     }
 
     btnNext.disabled = (faseAtual >= ultimaFaseAlcancada);
@@ -245,7 +252,7 @@ function avancarFase() {
     if (faseMaxConcluida === -1) {
         ultimaFaseAlcancada = 0;
     } else {
-        ultimaFaseAlcancada = Math.min(faseMaxConcluida + 1, 6);
+        ultimaFaseAlcancada = Math.min(faseMaxConcluida + 1, totalFasesCount);
     }
 
     if (faseAtual < ultimaFaseAlcancada) {
@@ -259,8 +266,9 @@ function setPhase(num, btn) {
     faseAtual = num;
 
     document.querySelectorAll('.neo-tab').forEach(b => b.classList.remove('active')); 
-    if(btn) btn.classList.add('active');
-    else {
+    if(btn) {
+        btn.classList.add('active');
+    } else {
         let fallbackBtn = document.getElementById('btn-fase-' + num);
         if(fallbackBtn) fallbackBtn.classList.add('active');
     }
@@ -291,7 +299,7 @@ function concluirRodada(faseAtualDaRodada, pontos = 300) {
         showNotification(`✅ CAMPANHA INICIADA!<br>Vamos construir a história juntos.`);
     }
     
-    if (nextFase <= 6) {
+    if (nextFase <= totalFasesCount) {
         setPhase(nextFase);
     }
     atualizarBotoesNavegacao();
@@ -547,15 +555,21 @@ function flipMemoryCard(cardEl) {
     }
 }
 
+// --- CARREGAMENTO DINÂMICO DE FASES E TABS ---
 async function carregarFases() {
     try {
         const resposta = await fetch('fases.json');
         const fases = await resposta.json();
-        const container = document.getElementById('fases-container');
         
-        container.innerHTML = ''; 
+        totalFasesCount = fases.length - 1; // Dinâmico pelo tamanho do json
+        const containerFases = document.getElementById('fases-container');
+        const containerTabs = document.getElementById('timeline-tabs-container');
+        
+        containerFases.innerHTML = ''; 
+        if(containerTabs) containerTabs.innerHTML = '';
         
         fases.forEach((fase, index) => {
+            // 1. Cria o conteúdo da Fase
             const div = document.createElement('div');
             div.id = `phase-${fase.id}`;
             div.className = `story-phase neo-card p-20 mt-15 ${index === 0 ? 'active' : ''}`;
@@ -566,25 +580,57 @@ async function carregarFases() {
                 <div class="gm-speech">📢 <i>${fase.narrativa}</i></div>
                 <button id="btn-concluir-${fase.id}" class="neo-btn btn-yellow w-100 mt-20" style="padding: 18px; font-size: 24px;" onclick="${fase.botao_acao}">${fase.botao_texto}</button>
             `;
-            container.appendChild(div);
+            containerFases.appendChild(div);
+
+            // 2. Cria a Aba (Tab) de Navegação Dinâmica
+            if(containerTabs) {
+                const btnTab = document.createElement('button');
+                btnTab.id = `btn-fase-${fase.id}`;
+                btnTab.className = `neo-tab ${index === 0 ? 'active' : ''}`;
+                
+                if (fase.id > faseMaxConcluida + 1) {
+                    btnTab.disabled = true;
+                }
+                
+                let tituloAba = fase.titulo;
+                btnTab.innerText = tituloAba;
+                btnTab.onclick = function() { setPhase(fase.id, this); };
+                containerTabs.appendChild(btnTab);
+            }
         });
         
         const initialFcDisplay = document.getElementById('rpg-fc-display');
         if(initialFcDisplay) initialFcDisplay.innerText = currentFC;
-
-        for (let i = 1; i <= 6; i++) {
-            let btn = document.getElementById('btn-fase-' + i);
-            if (btn) {
-                if (i <= faseMaxConcluida + 1) btn.disabled = false;
-                else btn.disabled = true;
-            }
-        }
         
-        let faseAtiva = Math.max(0, Math.min(faseMaxConcluida + 1, 6));
+        let faseAtiva = Math.max(0, Math.min(faseMaxConcluida + 1, totalFasesCount));
         setPhase(faseAtiva);
 
     } catch (erro) {
         console.error("Erro ao carregar fases.json.", erro);
     }
 }
+
+// --- CARREGAMENTO DINÂMICO DO QUIZ ---
+async function carregarQuiz() {
+    try {
+        const resposta = await fetch('quiz.json');
+        const perguntas = await resposta.json();
+        const containerQuiz = document.getElementById('quiz-questions-container');
+        
+        if(!containerQuiz) return;
+        containerQuiz.innerHTML = '';
+
+        perguntas.forEach((pergunta) => {
+            const label = document.createElement('label');
+            label.className = 'quiz-item';
+            label.innerHTML = `<input type="checkbox"> ${pergunta}`;
+            containerQuiz.appendChild(label);
+        });
+    } catch (erro) {
+        console.error("Erro ao carregar quiz.json.", erro);
+    }
+}
+
+// Inicializa tudo
 carregarFases();
+carregarQuiz();

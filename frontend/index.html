@@ -38,27 +38,24 @@
 
     <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
     
-    <!-- SISTEMA DE NOTIFICAÇÕES -->
     <div id="toast-container" aria-live="polite"></div>
     <div id="game-notification" class="game-notification">
         <div id="game-notification-content"></div>
     </div>
 
     <div class="content-viewport">
-        <!-- ABA DO MAPA -->
         <div id="mapa-comemorativo" class="page-view">
             <div id="real-map"></div>
             
-            <!-- PAINEL FIXAR MEMÓRIA -->
             <div class="conquista-panel neo-card p-20" style="background: var(--destaque-amarelo);">
                 <h3 style="font-family: var(--fonte-manchete); font-size: 24px; margin-bottom: 5px; text-transform: uppercase;">Fixar Memória</h3>
                 <p style="font-family: var(--fonte-documento); font-size: 12px; font-weight: bold; margin-bottom: 12px; color: var(--alerta-vermelho);">1º Clique em um local do mapa</p>
                 <div class="form-group"><label>2º Título da Vitória</label><input type="text" id="form-title" placeholder="Ex: Mutirão..."></div>
                 <div class="form-group"><label>3º Relato Histórico</label><textarea id="form-desc" rows="3" placeholder="Conte como a comunidade se uniu..."></textarea></div>
                 <button class="neo-btn btn-black w-100 mt-10" onclick="addUserConquista()">CRAVAR NO MAPA</button>
+                <button class="neo-btn btn-white w-100 mt-10" onclick="limparMapa()">Zerar Mapa</button>
             </div>
             
-            <!-- MODAL DO CARROSSEL DE MEMÓRIAS -->
             <div id="conquista-modal" class="modal-overlay">
                 <div class="conquista-card-detail neo-card p-0">
                     <button class="modal-close" onclick="closeMapModal()">X</button>
@@ -67,21 +64,18 @@
                         <button class="carousel-btn btn-next" onclick="moveCarousel(1)">▶</button>
                         <div class="carousel-track" id="carousel-track">
                             
-                            <!-- SLIDE 1 -->
                             <div class="carousel-slide" style="background: var(--alerta-vermelho); display: flex; align-items: center; justify-content: center;">
                                 <img src="assets/foto1.jpg" onerror="this.style.display='none'" style="width: 100%; height: 100%; object-fit: cover;">
                                 <span style="position: absolute; font-family: var(--fonte-manchete); font-size: 30px; color: white; opacity: 0.5; z-index: 1; pointer-events: none;">REGISTRO 01</span>
                                 <span class="slide-caption" id="cap-1">Lâmina 1</span>
                             </div>
                             
-                            <!-- SLIDE 2 -->
                             <div class="carousel-slide" style="background: var(--cor-acerto-verde); display: flex; align-items: center; justify-content: center;">
                                 <img src="assets/foto2.jpg" onerror="this.style.display='none'" style="width: 100%; height: 100%; object-fit: cover;">
                                 <span style="position: absolute; font-family: var(--fonte-manchete); font-size: 30px; color: white; opacity: 0.5; z-index: 1; pointer-events: none;">REGISTRO 02</span>
                                 <span class="slide-caption" id="cap-2">Lâmina 2</span>
                             </div>
                             
-                            <!-- SLIDE 3 -->
                             <div class="carousel-slide" style="background: var(--tinta-preta); display: flex; align-items: center; justify-content: center;">
                                 <img src="assets/foto3.jpg" onerror="this.style.display='none'" style="width: 100%; height: 100%; object-fit: cover;">
                                 <span style="position: absolute; font-family: var(--fonte-manchete); font-size: 30px; color: white; opacity: 0.5; z-index: 1; pointer-events: none;">REGISTRO 03</span>
@@ -99,11 +93,9 @@
             </div>
         </div>
 
-        <!-- ABA DO JOGO (RPG MESTRE) -->
         <div id="modo-jogo" class="page-view active">
             <div class="rpg-layout">
                 
-                <!-- BARRA LATERAL FIXA -->
                 <aside class="rpg-sidebar">
                     <div class="neo-card bg-black text-center p-20">
                         <div class="neo-label text-yellow">FORÇA COMUNITÁRIA</div>
@@ -127,10 +119,8 @@
                     </div>
                 </aside>
 
-                <!-- ÁREA PRINCIPAL -->
                 <main class="rpg-main">
 
-                    <!-- BARRA DE PROGRESSO -->
                     <div class="progress-container neo-card mb-20" style="margin-bottom: 20px; padding: 15px;">
                         <div class="progress-header">
                             <span id="current-phase-label">Fase 0 de 6</span>
@@ -145,15 +135,8 @@
                         </div>
                     </div>
 
-                    <div class="timeline-controls neo-timeline">
-                        <button id="btn-fase-0" class="neo-tab active" onclick="setPhase(0, this)">0. Início</button>
-                        <button id="btn-fase-1" class="neo-tab" onclick="setPhase(1, this)" disabled>1. O Choque</button>
-                        <button id="btn-fase-2" class="neo-tab" onclick="setPhase(2, this)" disabled>2. Associações</button>
-                        <button id="btn-fase-3" class="neo-tab" onclick="setPhase(3, this)" disabled>3. O Ofício</button>
-                        <button id="btn-fase-4" class="neo-tab" onclick="setPhase(4, this)" disabled>4. Fake News</button>
-                        <button id="btn-fase-5" class="neo-tab" onclick="setPhase(5, this)" disabled>5. Mutirão</button>
-                        <button id="btn-fase-6" class="neo-tab" onclick="setPhase(6, this)" disabled>6. Vitória</button>
-                    </div>
+                    <div class="timeline-controls neo-timeline" id="timeline-tabs-container">
+                        </div>
 
                     <div id="fases-container"></div>
 
@@ -168,11 +151,9 @@
 
             </div>
             
-            <!-- MODAIS DOS MINIGAMES -->
             <div class="minigame-modal-overlay" id="minigame-modal-overlay">
                 <div class="minigame-card-center neo-card">
                     
-                    <!-- CABEÇALHO DO DESAFIO -->
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--tinta-preta); padding-bottom: 20px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
                         
                         <div id="timer-minigame-mobile" style="display: flex; align-items: center; gap: 15px; background: var(--papel-fundo); padding: 15px; border: 4px solid var(--tinta-preta); box-shadow: 4px 4px 0 var(--tinta-preta);">
@@ -191,12 +172,11 @@
 
                     <div id="game-quiz" class="game-interface">
                         <div class="game-panel-title">🧠 O Povo Tem Memória? (Quiz)</div>
-                        <p style="font-family: var(--fonte-documento); font-weight: bold; margin-bottom:16px;">Mestre, assinale os acertos da equipe antes do fim do tempo.</p>
-                        <label class="quiz-item"><input type="checkbox"> 1. Erguidas em mutirões com doação de cimento.</label>
-                        <label class="quiz-item"><input type="checkbox"> 2. Bairros: São Jorge, Fazendinha, Sta Bárbara, Eulina, Boa Vista.</label>
-                        <label class="quiz-item"><input type="checkbox"> 3. Bloqueio do Aterro Sanitário por 20 dias.</label>
-                        <label class="quiz-item"><input type="checkbox"> 4. Fortalecidos pela Teologia da Libertação.</label>
-                        <label class="quiz-item"><input type="checkbox"> 5. Fretaram ônibus para a Secretaria em SP.</label>
+                        <p style="font-family: var(--fonte-documento); font-weight: bold; margin-bottom:16px;">Mestre, valide a resposta da equipe baseada na sua tela!</p>
+                        
+                        <div id="quiz-questions-container">
+                            </div>
+
                         <button class="neo-btn btn-black w-100 mt-15 btn-claim visible" onclick="addPoints(300)">CONFIRMAR +300 FORÇA</button>
                     </div>
 

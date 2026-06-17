@@ -1,0 +1,137 @@
+[
+    {
+        "pergunta": "1) Nos anos 80, onde as crianças do Pq São Jorge estudavam?",
+        "opcoes": [
+            "A) Na escola do bairro",
+            "B) Escola do Jd. Rosolém - Hortolândia",
+            "C) Na Escola do Pq Fazendinha"
+        ],
+        "correta": 1
+    },
+    {
+        "pergunta": "2) Onde funcionava a 1ª escola do Pq São Jorge?",
+        "opcoes": [
+            "A) No terreno da Prefeitura",
+            "B) Em salas construídas pelos moradores",
+            "C) No mesmo lugar do Posto de Saúde"
+        ],
+        "correta": 1
+    },
+    {
+        "pergunta": "3) Quando foi conquistada a Escola Estadual Profa. Rita de Cássia da Silva?",
+        "opcoes": [
+            "A) Entre 1998 e 2002",
+            "B) Entre 1990 e 1995",
+            "C) Entre 1995 e 1998"
+        ],
+        "correta": 0
+    },
+    {
+        "pergunta": "4) Que tipo de documento foi entregue à Prefeitura solicitando a construção da Escola Profa. Rita de Cássia da Silva?",
+        "opcoes": [
+            "A) Moção de Apelo",
+            "B) Abaixo-Assinado",
+            "C) Solicitação de Audiência Pública na Câmara Municipal"
+        ],
+        "correta": 1
+    },
+    {
+        "pergunta": "5) Onde as famílias deixavam as crianças pequenas, antes da construção da creche do Pq São Jorge?",
+        "opcoes": [
+            "A) Creche do Boa Vista",
+            "B) Creche Mae Cristina",
+            "C) Creche do Jd Rosolém"
+        ],
+        "correta": 1
+    },
+    {
+        "pergunta": "6) Quais foram os personagens da luta pela conquista da construção da Escola Estadual Profa. Rita de Cássia da Silva?",
+        "opcoes": [
+            "A) Lideranças do bairro, Associação de Moradores, Comunidade Eclesial de base e famílias",
+            "B) Vereadores, Associação de Moradores e Secretaria da Educação",
+            "C) Organizações Não Governamentais do bairro"
+        ],
+        "correta": 0
+    },
+    {
+        "pergunta": "7) Qual luta da população conquistou a construção do Posto de Saúde?",
+        "opcoes": [
+            "A) Passeata com mais de 200 moradores da região",
+            "B) Fechamento do Aterro Sanitário por cerca de 1 mês",
+            "C) Abaixo assinado com mais do 1000 assinaturas"
+        ],
+        "correta": 1
+    },
+    {
+        "pergunta": "8) Quem foi a Profa. Rita de Cássia da Silva, que dá nome à escola?",
+        "opcoes": [
+            "A) Professora do 1º ano do então prefeito de Campinas, Dr. Hélio de Oliveira Santos",
+            "B) Professora de Filosofia na Unicamp",
+            "C) Professora da escola desde 2002 muito respeitada por todos"
+        ],
+        "correta": 2
+    },
+    {
+        "pergunta": "9) Quem enviou ofício à Prefeitura em 1998, solicitando a construção da Escola Estadual Profa. Rita de Cássia da Silva?",
+        "opcoes": [
+            "A) Vereadora Ester Viana, única mulher na Câmara Municipal à Época",
+            "B) Secretaria Municipal de Educação de Campinas",
+            "C) Sociedade Amigos de Bairro - Parque São Jorge"
+        ],
+        "correta": 2
+    },
+    {
+        "pergunta": "10) Ari, Avelino, Elza, Leila, Lourival, Maria, Neiva, Vecchi e Verônica, entre outros nomes, são pessoas importantes na história do Pq São Jorge. Por quê?",
+        "opcoes": [
+            "A) Equipe de Tênis de Mesa que conquistou o campeonato Municipal em 1985.",
+            "B) Foram/são lideranças que ajudaram a organizar a luta pelas conquistas do bairro.",
+            "C) São comerciantes que ajudam no desenvolvimento do bairro."
+        ],
+        "correta": 1
+    },
+    {
+        "pergunta": "11) Qual situação levou a conquista da Escola Estadual Antônio Carlos Pacheco e Silva, no Pq. São Jorge?",
+        "opcoes": [
+            "A) Os professores que queriam trabalhar na escola se mobilizaram e conquistaram.",
+            "B) A prefeitura entendeu que o bairro precisava de mais uma escola.",
+            "C) A Escola Domingos Zati, no Pq. Fazendinha, não tinha mais vagas."
+        ],
+        "correta": 2
+    },
+    {
+        "pergunta": "12) Que forma de protesto foi utilizada para a conquista da Passarela do Pq. Santa Bárbara?",
+        "opcoes": [
+            "A) Passeata do bairro até a prefeitura",
+            "B) Paralização da pista por 4 ou 5 vezes",
+            "C) Pedido de vereadores para a Administração Regional"
+        ],
+        "correta": 1
+    },
+    {
+        "pergunta": "13) Onde os moradores foram protestar pela construção das escolas do Pq. São Jorge?",
+        "opcoes": [
+            "A) Prefeitura, Delegacia de Ensino em Campinas e Delegacia de Ensino em São Paulo",
+            "B) Prefeitura de Campinas",
+            "C) Câmara de Vereadores de Campinas"
+        ],
+        "correta": 0
+    },
+    {
+        "pergunta": "14) Em quais anos teve um aumento muito grande de moradores no Pq. São Jorge?",
+        "opcoes": [
+            "A) de 1985 a 1988",
+            "B) de 1992 a 1993",
+            "C) de 1995 a 2000"
+        ],
+        "correta": 1
+    },
+    {
+        "pergunta": "15) Onde começou a funcionar o Posto de Saúde que atende os moradores do Pq. São Jorge?",
+        "opcoes": [
+            "A) Na Escola Municipal do bairro",
+            "B) Nas salas do fundo da Igreja",
+            "C) No barracão onde funcionava um supermercado"
+        ],
+        "correta": 1
+    }
+]
