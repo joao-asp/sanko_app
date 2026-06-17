@@ -57,9 +57,21 @@ function showToast(msg, type = 'success') {
     setTimeout(() => { if(toast.parentNode) toast.parentNode.removeChild(toast); }, 4000);
 }
 
+// NOTIFICAÇÃO CENTRAL (MATHEUS)
+function showNotification(message, duration = 4000) {
+    const notification = document.getElementById('game-notification');
+    const content = document.getElementById('game-notification-content');
+    content.innerHTML = message;
+    notification.classList.add('show');
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, duration);
+}
+
 let storedFase = localStorage.getItem('sanko_fase_max');
 let faseMaxConcluida = storedFase !== null ? parseInt(storedFase) : -1;
 let currentFC = parseInt(localStorage.getItem('sanko_fc')) || 0;
+let faseAtual = 0;
 
 function adjustFC(amount) {
     currentFC += amount;
@@ -73,8 +85,63 @@ function adjustFC(amount) {
     else showToast(`${amount} Força Comunitária!`, 'error');
 }
 
+// BARRA DE PROGRESSO (MATHEUS)
+function atualizarBarraProgresso(faseAtualizada) {
+    const totalFases = 6;
+    const porcentagem = (faseAtualizada / totalFases) * 100;
+
+    const fill = document.getElementById("progress-fill");
+    if(fill) fill.style.width = porcentagem + "%";
+
+    const label = document.getElementById("current-phase-label");
+    if(label) label.innerText = `Fase ${faseAtualizada} de ${totalFases}`;
+
+    const percent = document.getElementById("progress-percent");
+    if(percent) percent.innerText = `${Math.round(porcentagem)}%`;
+}
+
+function atualizarBotoesNavegacao() {
+    const btnPrev = document.getElementById('btn-prev-phase');
+    const btnNext = document.getElementById('btn-next-phase');
+
+    if (!btnPrev || !btnNext) return;
+
+    btnPrev.disabled = (faseAtual <= 0);
+
+    let ultimaFaseAlcancada;
+    if (faseMaxConcluida === -1) {
+        ultimaFaseAlcancada = 0;
+    } else {
+        ultimaFaseAlcancada = Math.min(faseMaxConcluida + 1, 6);
+    }
+
+    btnNext.disabled = (faseAtual >= ultimaFaseAlcancada);
+}
+
+function voltarFase() {
+    if (faseAtual > 0) {
+        setPhase(faseAtual - 1);
+    }
+}
+
+function avancarFase() {
+    let ultimaFaseAlcancada;
+    if (faseMaxConcluida === -1) {
+        ultimaFaseAlcancada = 0;
+    } else {
+        ultimaFaseAlcancada = Math.min(faseMaxConcluida + 1, 6);
+    }
+
+    if (faseAtual < ultimaFaseAlcancada) {
+        setPhase(faseAtual + 1);
+    }
+}
+
 function setPhase(num, btn) {
     if (btn && btn.disabled) return; 
+    
+    faseAtual = num;
+
     document.querySelectorAll('.neo-tab').forEach(b => b.classList.remove('active')); 
     if(btn) btn.classList.add('active');
     else {
@@ -85,23 +152,33 @@ function setPhase(num, btn) {
     document.querySelectorAll('.story-phase').forEach(p => p.classList.remove('active'));
     let phaseDiv = document.getElementById('phase-' + num);
     if(phaseDiv) phaseDiv.classList.add('active');
+
+    atualizarBarraProgresso(num);
+    atualizarBotoesNavegacao();
 }
 
-function concluirRodada(faseAtual, pontos = 300) {
+function concluirRodada(faseAtualDaRodada, pontos = 300) {
     if(pontos > 0) adjustFC(pontos);
     
-    let nextFase = faseAtual + 1;
-    if (faseAtual > faseMaxConcluida) {
-        faseMaxConcluida = faseAtual;
+    let nextFase = faseAtualDaRodada + 1;
+    if (faseAtualDaRodada > faseMaxConcluida) {
+        faseMaxConcluida = faseAtualDaRodada;
         localStorage.setItem('sanko_fase_max', faseMaxConcluida);
     }
     
     let nextPhaseBtn = document.getElementById('btn-fase-' + nextFase);
     if(nextPhaseBtn) nextPhaseBtn.disabled = false;
+
+    if(faseAtualDaRodada > 0) {
+        showNotification(`✅ RODADA ${faseAtualDaRodada} CONCLUÍDA!<br>A comunidade superou esta etapa e ganhou +${pontos} de Força Comunitária!`);
+    } else {
+        showNotification(`✅ CAMPANHA INICIADA!<br>Vamos construir a história juntos.`);
+    }
     
     if (nextFase <= 6) {
         setPhase(nextFase);
     }
+    atualizarBotoesNavegacao();
 }
 
 // --- SINCRONIA DE CRONÔMETRO ---
@@ -370,7 +447,6 @@ async function carregarFases() {
             div.id = `phase-${fase.id}`;
             div.className = `story-phase neo-card p-20 mt-15 ${index === 0 ? 'active' : ''}`;
             
-            // O texto da mecânica foi totalmente apagado desta geração
             div.innerHTML = `
                 <div class="phase-year">${fase.ano}</div>
                 <div class="phase-title">${fase.titulo}</div>
@@ -392,7 +468,7 @@ async function carregarFases() {
             }
         }
         
-        // Define a fase inicial na tela
+        // Define a fase inicial na tela e atualiza a barra de progresso do Matheus
         let faseAtiva = Math.max(0, Math.min(faseMaxConcluida + 1, 6));
         setPhase(faseAtiva);
 

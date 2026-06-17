@@ -46,11 +46,16 @@ nav {
 }
 .tab-btn:hover, .tab-btn.active { background-color: var(--destaque-amarelo); color: var(--tinta-preta); box-shadow: 4px 4px 0 rgba(255,255,255,0.2);}
 
-/* TOASTS */
+/* TOASTS E NOTIFICAÇÕES */
 #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
 .toast-notification { background: var(--tinta-preta); color: white; border-left: 6px solid var(--destaque-amarelo); padding: 15px 20px; font-family: var(--fonte-documento); font-weight: bold; box-shadow: 4px 4px 0 rgba(0,0,0,0.5); animation: slideIn 0.3s, fadeOut 0.5s 3.5s forwards; min-width: 250px;}
 .toast-error { border-left-color: var(--alerta-vermelho); }
 .toast-success { border-left-color: var(--cor-acerto-verde); }
+
+.game-notification { position: fixed; top: 30px; right: 30px; z-index: 99999; opacity: 0; visibility: hidden; transform: translateY(-20px); transition: all 0.3s ease; }
+.game-notification.show { opacity: 1; visibility: visible; transform: translateY(0); }
+#game-notification-content { background: var(--destaque-amarelo); color: var(--tinta-preta); padding: 15px 25px; border: 4px solid var(--tinta-preta); font-family: var(--fonte-documento); font-weight: bold; font-size: 16px; box-shadow: 8px 8px 0 var(--tinta-preta); max-width: 400px; text-align: center; }
+
 @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
 
@@ -70,7 +75,6 @@ nav {
     align-items: flex-start;
 }
 
-/* BARRA LATERAL FIXA (STICKY) */
 .rpg-sidebar { 
     width: 320px; 
     flex-shrink: 0; 
@@ -83,7 +87,6 @@ nav {
     align-self: flex-start;
 }
 
-/* A LINHA DIVISÓRIA PASSOU PARA A DIREITA PARA FICAR PERFEITA E ESTICAR JUNTO COM O CONTEÚDO */
 .rpg-main { 
     flex-grow: 1; 
     display: flex; 
@@ -233,12 +236,12 @@ nav {
         width: 100%; 
         flex-direction: column; 
         padding-right: 0;
-        position: relative; /* Remove o sticky no celular para não travar a rolagem */
+        position: relative;
         top: 0;
     }
     
     .rpg-main {
-        border-left: none; /* Remove a linha divisória no celular */
+        border-left: none;
         padding-left: 0;
     }
     

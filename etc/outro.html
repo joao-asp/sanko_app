@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O Cotidiano e a Luta - Mapa Interativo</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #1a1e29; overflow: hidden; }
+        #map { width: 100%; height: 100vh; z-index: 1; }
+        #map.adding-pin { cursor: crosshair !important; }
+
+        /* --- SELETOR DE MODOS NO TOPO --- */
+        #mode-selector {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.9); padding: 5px; border-radius: 30px;
+            z-index: 1000; display: flex; gap: 5px; border: 1px solid #334155;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .mode-btn {
+            background: transparent; color: white; border: none; padding: 10px 20px;
+            border-radius: 25px; cursor: pointer; font-weight: bold; transition: all 0.3s; font-size: 0.9rem;
+        }
+        .mode-btn:hover { color: #4ade80; }
+        .mode-btn.active { background: #4ade80; color: #000; }
+
+        /* --- BOTÃO DE ADICIONAR HISTÓRIA --- */
+        #btn-add-story {
+            display: none; position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background-color: #e74c3c; color: white; border: none; padding: 15px 30px;
+            border-radius: 50px; font-size: 1rem; font-weight: bold;
+            box-shadow: 0 5px 20px rgba(231, 76, 60, 0.4); cursor: pointer; z-index: 1000;
+            transition: all 0.2s; text-transform: uppercase;
+        }
+        #btn-add-story:hover { background-color: #c0392b; transform: translateX(-50%) translateY(-3px); }
+        #btn-add-story.adding { background-color: #f39c12; }
+
+        /* --- OVERLAYS COMUNS --- */
+        .overlay-card {
+            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background-color: #1a1e29; width: 380px; max-width: 90%; border-radius: 16px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.8); z-index: 1000; border: 1px solid #334155;
+            overflow: hidden; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+        .close-btn { position: absolute; top: 10px; right: 15px; color: #fff; background: rgba(0,0,0,0.5); border-radius: 50%; width: 28px; height: 28px; line-height: 26px; text-align: center; cursor: pointer; font-size: 1.2rem; font-weight: bold; z-index: 1001; }
+        .close-btn:hover { background: #e74c3c; }
+
+        /* --- CARROSSEL --- */
+        .carousel-container { width: 100%; height: 200px; position: relative; background-color: #000; }
+        .carousel-track-container { width: 100%; height: 100%; overflow: hidden; }
+        .carousel-image { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .carousel-image.active { display: block; }
+        .carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 50%; font-size: 0.9rem; z-index: 10; }
+        .carousel-btn:hover { background: #4ade80; color: black; }
+        .carousel-btn.prev { left: 10px; }
+        .carousel-btn.next { right: 10px; }
+
+        /* --- MODO JOGO (QUIZ UI) --- */
+        .quiz-body { padding: 20px; text-align: center; }
+        .speech-bubble { background-color: #ffffff; color: #1a1a1a; padding: 15px; border-radius: 10px; font-size: 0.95rem; font-weight: bold; position: relative; margin-bottom: 25px; line-height: 1.4; }
+        .speech-bubble::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 10px 10px 0; border-style: solid; border-color: #ffffff transparent transparent transparent; }
+        .btn-option { background-color: transparent; border: 2px solid #4ade80; color: #ffffff; padding: 12px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; font-size: 0.85rem; width: 100%; font-weight: bold; transition: all 0.2s; text-align: left; }
+        .btn-option:hover { background-color: #4ade80; color: #000; }
+
+        /* --- MODO ACERVO (STORY UI) --- */
+        .story-body { padding: 25px 20px; text-align: left; color: #fcfbfa; }
+        .bairro-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; color: #f39c12; text-transform: uppercase; }
+        .bairro-story { font-size: 0.95rem; line-height: 1.6; color: #cbd5e1; }
+
+        /* --- FORMULÁRIO DE ADICIONAR PINO --- */
+        .form-body { padding: 30px 20px; }
+        .form-title { font-size: 1.2rem; font-weight: bold; color: #4ade80; margin-bottom: 15px; text-align: center; }
+        .input-field { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #475569; background-color: #0f172a; color: white; box-sizing: border-box; }
+        .textarea-field { width: 100%; padding: 12px; height: 100px; border-radius: 8px; border: 1px solid #475569; background-color: #0f172a; color: white; box-sizing: border-box; resize: none; font-family: inherit; }
+        .btn-submit { width: 100%; background-color: #4ade80; color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 10px; }
+        .btn-submit:hover { background-color: #22c55e; }
+
+        /* --- PINOS NO MAPA --- */
+        .custom-div-icon { text-align: center; }
+        .pin-point { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 10px rgba(0,0,0,0.8); display: inline-block; transition: transform 0.2s; }
+        .pin-label { display: block; background-color: rgba(0,0,0,0.8); color: #fff; font-size: 10px; font-weight: bold; padding: 2px 5px; border-radius: 4px; white-space: nowrap; margin-top: -3px; }
+        .leaflet-marker-icon:hover .pin-point { transform: scale(1.5); }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <div id="mode-selector">
+        <button id="btn-mode-game" class="mode-btn active" onclick="setMode('game')">🕹️ Modo Jogo</button>
+        <button id="btn-mode-expo" class="mode-btn" onclick="setMode('expo')">📖 Modo Acervo</button>
+    </div>
+
+    <button id="btn-add-story" onclick="toggleAddMode()">+ Adicionar Minha História</button>
+
+    <div id="quiz-overlay" class="overlay-card">
+        <div class="close-btn" onclick="closeOverlays()">×</div>
+        <div class="carousel-container">
+            <button class="carousel-btn prev" onclick="moveCarousel(-1)">&#10094;</button>
+            <div id="carousel-track-quiz" class="carousel-track-container"></div>
+            <button class="carousel-btn next" onclick="moveCarousel(1)">&#10095;</button>
+        </div>
+        <div class="quiz-body">
+            <div id="quiz-question" class="speech-bubble"></div>
+            <div id="quiz-options"></div>
+        </div>
+    </div>
+
+    <div id="story-overlay" class="overlay-card">
+        <div class="close-btn" onclick="closeOverlays()">×</div>
+        <div class="carousel-container">
+            <button class="carousel-btn prev" onclick="moveCarousel(-1)">&#10094;</button>
+            <div id="carousel-track-story" class="carousel-track-container"></div>
+            <button class="carousel-btn next" onclick="moveCarousel(1)">&#10095;</button>
+        </div>
+        <div class="story-body">
+            <div id="story-title" class="bairro-title"></div>
+            <div id="story-text" class="bairro-story"></div>
+        </div>
+    </div>
+
+    <div id="form-overlay" class="overlay-card">
+        <div class="close-btn" onclick="closeOverlays()">×</div>
+        <div class="form-body">
+            <div class="form-title">Deixe sua marca na cidade</div>
+            <input type="text" id="input-bairro" class="input-field" placeholder="Nome do Bairro ou Rua">
+            <textarea id="input-story" class="textarea-field" placeholder="Escreva a sua história ou conquista local..."></textarea>
+            <button class="btn-submit" onclick="saveUserPin()">Salvar no Mapa</button>
+        </div>
+    </div>
+
+    <script>
+        var currentMode = 'game';
+
+        // 1. DADOS COMPLEXOS COM OPÇÕES ESPECÍFICAS
+        var locationsData = [
+            { 
+                id: 0, coords: [-22.980, -47.140], label: 'Ouro Verde', color: '#8b5cf6', 
+                question: "Na década de 90, o <strong>Ouro Verde</strong> lutou pela descentralização da saúde. Qual movimento organizou marchas para a construção do Hospital Ouro Verde?",
+                options: ["A) O Movimento Popular de Saúde (MOPS)", "B) A iniciativa privada local", "C) Um consórcio de vereadores independentes"],
+                correct: 0,
+                story: "<strong>Ouro Verde:</strong> Não foi planejamento urbano passivo. A rede de saúde do Ouro Verde nasceu da forte pressão do Movimento Popular de Saúde de Campinas (MOPS), que organizou marchas e abaixo-assinados gigantescos para obrigar o Estado a descentralizar o atendimento." 
+            },
+            { 
+                id: 1, coords: [-22.925, -47.150], label: 'Satélite Íris', color: '#f43f5e', 
+                question: "A luta por creches no <strong>Satélite Íris</strong> forçou a prefeitura a construir as unidades. Quem liderou e protagonizou essa mobilização específica?",
+                options: ["A) O Sindicato dos Metalúrgicos", "B) Mulheres e mães trabalhadoras do bairro", "C) A Secretaria de Assistência Social"],
+                correct: 1,
+                story: "<strong>Satélite Íris:</strong> As creches (CEIs) e escolas do Satélite Íris foram frutos de mobilização intensa, liderada quase exclusivamente por mulheres e mães do bairro, que exigiam espaços seguros para deixar seus filhos enquanto trabalhavam, forçando a prefeitura na marra." 
+            },
+            { 
+                id: 2, coords: [-22.950, -47.055], label: 'Parque Oziel', color: '#10b981', 
+                question: "Antes da regularização do <strong>Parque Oziel</strong>, o Estado não entrava no território. Como as crianças da ocupação começaram a ter acesso a aulas?",
+                options: ["A) O governo enviou escolas móveis em contêineres", "B) ONGs internacionais financiaram os espaços", "C) Moradores construíram barracões comunitários"],
+                correct: 2,
+                story: "<strong>Parque Oziel:</strong> Antes do Estado reconhecer a ocupação, os próprios moradores se mobilizaram, construíram barracões comunitários e organizaram as primeiras salas de aula com trabalho voluntário, provando que a favela se autogere." 
+            },
+            { 
+                id: 3, coords: [-22.840, -47.110], label: 'São Marcos', color: '#06b6d4', 
+                question: "O Centro de Saúde do <strong>São Marcos</strong> é referência em 'Comunidades Saudáveis'. Qual mecanismo oficial a população usou para cobrar um atendimento mais humano?",
+                options: ["A) O Conselho Local de Saúde, participando da gestão", "B) A terceirização integral da unidade", "C) O acionamento diário do Ministério Público"],
+                correct: 0,
+                story: "<strong>São Marcos:</strong> Através do Conselho Local de Saúde! A comunidade usou a participação direta para pintar a história de luta nos muros do posto e cobrou, junto a movimentos sociais, um atendimento preventivo." 
+            },
+            { 
+                id: 4, coords: [-22.940, -47.150], label: 'Jardim Florence', color: '#ec4899', 
+                question: "Nos anos 2000, o <strong>Jardim Florence</strong> sofria com a grave falta de vagas escolares. Qual foi a tática adotada para acelerar a licitação de obras?",
+                options: ["A) Esperar o plano de metas do Ministério da Educação", "B) Trancamentos de ruas e caminhões de som", "C) Financiamento coletivo (vaquinha) para alugar salas"],
+                correct: 1,
+                story: "<strong>Jardim Florence:</strong> A população organizou trancamentos de ruas e levou caminhões de som para a porta do poder público. A pressão foi tanta que furou a burocracia e acelerou a construção de escolas de educação básica na região." 
+            },
+            { 
+                id: 5, coords: [-22.990, -47.110], label: 'DICs Costa e Silva', color: '#e74c3c', 
+                question: "As casas dos <strong>DICs</strong> foram entregues sem infraestrutura. Como a pressão garantiu os primeiros centros de atendimento de saúde?",
+                options: ["A) Através da formação de Comitês de Bairro", "B) Pelas construtoras que compensaram o atraso da obra", "C) Por um decreto emergencial do governo federal"],
+                correct: 0,
+                story: "<strong>DICs Costa e Silva:</strong> As chaves foram entregues sem água e luz. Os moradores formaram Comitês de Bairro. A construção dos centros de saúde ocorreu após fortes protestos na prefeitura, exigindo que o DIC não fosse um depósito de gente." 
+            },
+            { 
+                id: 6, coords: [-22.956, -47.165], label: 'Campo Grande', color: '#f39c12', 
+                question: "Para conseguir a construção de escolas no <strong>Campo Grande</strong>, as lideranças usaram uma tática de forte impacto na cidade. Qual foi?",
+                options: ["A) Greve de fome em praça pública", "B) Boicote massivo ao pagamento do IPTU", "C) Paralisar o transporte fechando vias cruciais"],
+                correct: 2,
+                story: "<strong>Campo Grande:</strong> Em vez de esperar ofícios governamentais, as lideranças trancaram vias cruciais. Foi a tática da paralisação que forçou a administração a investir não só em asfalto, mas em postos de saúde e escolas." 
+            },
+            { 
+                id: 7, coords: [-23.010, -47.080], label: 'Jardim Fernanda', color: '#14b8a6', 
+                question: "Contra a precarização e a falta de médicos no posto de saúde do <strong>Jardim Fernanda</strong>, quem se uniu para realizar protestos na porta da unidade?",
+                options: ["A) Apenas a diretoria técnica do hospital", "B) Pacientes e funcionários da saúde em união", "C) O Conselho Federal de Medicina"],
+                correct: 1,
+                story: "<strong>Jardim Fernanda:</strong> Os próprios pacientes, em aliança e união direta com os funcionários da saúde, realizaram paralisações exigindo contratação via concurso e segurança, na defesa intransigente do SUS." 
+            },
+            { 
+                id: 8, coords: [-22.945, -47.115], label: 'Vila União', color: '#d946ef', 
+                question: "A <strong>Vila União</strong> é símbolo da luta pelo teto. Depois de garantirem a terra contra despejos, como exigiram as escolas?",
+                options: ["A) Pressionando a inclusão de verba no Orçamento", "B) Aguardando doações de materiais de construção", "C) Fechando parcerias de publicidade com empresas privadas"],
+                correct: 0,
+                story: "<strong>Vila União:</strong> Depois de garantirem a posse da terra contra despejos violentos, a comunidade fundou associações e cobrou diretamente do orçamento da cidade a verba carimbada para escolas e para o posto de saúde." 
+            },
+            { 
+                id: 9, coords: [-22.860, -47.150], label: 'Nova Aparecida', color: '#f97316', 
+                question: "Isolados por rodovias, moradores do <strong>Nova Aparecida</strong> dependiam de viajar para ir ao médico. O que forçou a fixação do posto de saúde ali?",
+                options: ["A) O fechamento dos acessos da rodovia pela comunidade", "B) Um plano diretor que mapeou a área naturalmente", "C) A construção prévia de uma nova passarela de pedestres"],
+                correct: 0,
+                story: "<strong>Nova Aparecida:</strong> A dependência de viajar quilômetros fez com que a comunidade organizasse manifestações parando o trânsito da rodovia, exigindo que a saúde fosse descentralizada e fixada dentro do território." 
+            }
+        ];
+
+        // 2. INICIALIZAÇÃO DO MAPA
+        var map = L.map('map', { zoomControl: false }).setView([-22.930, -47.080], 11.5);
+        L.control.zoom({ position: 'topright' }).addTo(map);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        // Renderiza os Pinos Iniciais
+        locationsData.forEach(function(loc) {
+            loc.images = [
+                `https://via.placeholder.com/400x200/${loc.color.replace('#','')}/fff?text=${loc.label.replace(/ /g, '+')}`,
+                `https://via.placeholder.com/400x200/1e293b/ccc?text=Acervo+Histórico`
+            ];
+            createMarker(loc);
+        });
+
+        function createMarker(loc) {
+            var customIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div class="pin-point" style="background-color: ${loc.color};"></div><span class="pin-label" style="color: ${loc.color};">${loc.label}</span>`,
+                iconSize: [0, 0], iconAnchor: [6, 6]
+            });
+
+            var marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
+            marker.on('click', function() {
+                if(isAddingMode) return; 
+                if(currentMode === 'game') openQuiz(loc);
+                else openStory(loc);
+            });
+        }
+
+        // --- SISTEMA DE TROCA DE MODO ---
+        function setMode(mode) {
+            currentMode = mode;
+            closeOverlays();
+            document.getElementById('btn-mode-game').classList.remove('active');
+            document.getElementById('btn-mode-expo').classList.remove('active');
+            
+            if(mode === 'game') {
+                document.getElementById('btn-mode-game').classList.add('active');
+                document.getElementById('btn-add-story').style.display = 'none'; 
+            } else {
+                document.getElementById('btn-mode-expo').classList.add('active');
+                document.getElementById('btn-add-story').style.display = 'block'; 
+            }
+        }
+
+        // --- MODO JOGO ---
+        function openQuiz(loc) {
+            map.panTo(loc.coords);
+            document.getElementById('quiz-question').innerHTML = loc.question;
+            
+            // Gera os botões baseados nas opções específicas do bairro
+            let optionsHTML = '';
+            loc.options.forEach((opt, index) => {
+                // Passa o ID da localidade e o Índice da escolha
+                optionsHTML += `<button class="btn-option" onclick="checkAnswer(${loc.id}, ${index})">${opt}</button>`;
+            });
+            document.getElementById('quiz-options').innerHTML = optionsHTML;
+
+            populateCarousel(loc.images, 'carousel-track-quiz');
+            document.getElementById('quiz-overlay').style.display = 'block';
+        }
+
+        // Checagem de Resposta e Transição
+        function checkAnswer(locId, chosenIndex) {
+            var loc = locationsData.find(l => l.id === locId);
+            if (chosenIndex === loc.correct) {
+                alert("Resposta Correta! É a força da mobilização na prática.");
+            } else {
+                alert("Não foi bem assim... A engrenagem da burocracia exigiu caminhos diferentes.");
+            }
+            // Após alertar, fecha o quiz e abre a verdade histórica (Modo Acervo)
+            closeOverlays();
+            setTimeout(() => { openStory(loc); }, 100);
+        }
+
+        // --- MODO ACERVO ---
+        function openStory(loc) {
+            map.panTo(loc.coords);
+            document.getElementById('story-title').innerText = loc.label;
+            document.getElementById('story-title').style.color = loc.color;
+            document.getElementById('story-text').innerHTML = loc.story;
+            populateCarousel(loc.images, 'carousel-track-story');
+            document.getElementById('story-overlay').style.display = 'block';
+        }
+
+        function closeOverlays() {
+            document.getElementById('quiz-overlay').style.display = 'none';
+            document.getElementById('story-overlay').style.display = 'none';
+            document.getElementById('form-overlay').style.display = 'none';
+            if(isAddingMode) toggleAddMode();
+        }
+
+        // --- CARROSSEL ---
+        var carouselIndex = 0;
+        function populateCarousel(imagesArray, trackId) {
+            var track = document.getElementById(trackId);
+            track.innerHTML = ''; carouselIndex = 0; 
+            imagesArray.forEach(function(imgUrl, index) {
+                var img = document.createElement('img'); img.src = imgUrl; img.className = 'carousel-image';
+                if(index === 0) img.className += ' active'; 
+                track.appendChild(img);
+            });
+        }
+        function moveCarousel(direction) {
+            var trackId = document.getElementById('quiz-overlay').style.display === 'block' ? 'carousel-track-quiz' : 'carousel-track-story';
+            var track = document.getElementById(trackId);
+            var images = track.querySelectorAll('.carousel-image');
+            if(images.length <= 1) return; 
+            images[carouselIndex].classList.remove('active');
+            carouselIndex = (carouselIndex + direction + images.length) % images.length;
+            images[carouselIndex].classList.add('active');
+        }
+
+        // --- ADICIONAR PINO COLABORATIVO ---
+        var isAddingMode = false;
+        var tempCoords = null;
+        function toggleAddMode() {
+            isAddingMode = !isAddingMode;
+            var btn = document.getElementById('btn-add-story');
+            if(isAddingMode) {
+                btn.innerText = "Clique num local no mapa...";
+                btn.classList.add('adding');
+                document.getElementById('map').classList.add('adding-pin');
+                closeOverlays();
+            } else {
+                btn.innerText = "+ Adicionar Minha História";
+                btn.classList.remove('adding');
+                document.getElementById('map').classList.remove('adding-pin');
+            }
+        }
+
+        map.on('click', function(e) {
+            if(isAddingMode) {
+                tempCoords = e.latlng;
+                document.getElementById('form-overlay').style.display = 'block';
+                map.panTo(tempCoords);
+            }
+        });
+
+        function saveUserPin() {
+            var bairro = document.getElementById('input-bairro').value;
+            var story = document.getElementById('input-story').value;
+            if(!bairro || !story) { alert("Preencha os campos!"); return; }
+
+            // Gera um ID único para o novo pino
+            var newId = locationsData.length; 
+
+            var newUserLoc = {
+                id: newId, coords: [tempCoords.lat, tempCoords.lng],
+                label: bairro, color: '#ec4899',
+                question: "Nova história descoberta. O que aconteceu aqui?",
+                options: ["A) História enviada por usuário", "B) Arquivo não catalogado", "C) Dado do Governo"],
+                correct: 0,
+                story: `<strong>História Colaborativa:</strong><br><br>${story}`,
+                images: [`https://via.placeholder.com/400x200/ec4899/fff?text=${bairro.replace(/ /g, '+')}`]
+            };
+
+            locationsData.push(newUserLoc); // Adiciona ao banco de dados local
+            createMarker(newUserLoc);
+            
+            document.getElementById('input-bairro').value = '';
+            document.getElementById('input-story').value = '';
+            toggleAddMode(); closeOverlays();
+            
+            setTimeout(() => { openStory(newUserLoc); }, 300);
+        }
+    </script>
+</body>
+</html>

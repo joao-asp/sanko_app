@@ -37,10 +37,13 @@
     </div>
 
     <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+    
     <div id="toast-container" aria-live="polite"></div>
+    <div id="game-notification" class="game-notification">
+        <div id="game-notification-content"></div>
+    </div>
 
     <div class="content-viewport">
-        <!-- ABA DO MAPA -->
         <div id="mapa-comemorativo" class="page-view">
             <div id="real-map"></div>
             <div class="conquista-panel neo-card">
@@ -51,11 +54,9 @@
             </div>
         </div>
 
-        <!-- ABA DO JOGO (RPG MESTRE) -->
         <div id="modo-jogo" class="page-view active">
             <div class="rpg-layout">
                 
-                <!-- BARRA LATERAL FIXA -->
                 <aside class="rpg-sidebar">
                     <div class="neo-card bg-black text-center p-20">
                         <div class="neo-label text-yellow">FORÇA COMUNITÁRIA</div>
@@ -79,8 +80,22 @@
                     </div>
                 </aside>
 
-                <!-- ÁREA PRINCIPAL -->
                 <main class="rpg-main">
+
+                    <div class="progress-container neo-card mb-20" style="margin-bottom: 20px; padding: 15px;">
+                        <div class="progress-header">
+                            <span id="current-phase-label">Fase 0 de 6</span>
+                            <span id="progress-percent">0%</span>
+                        </div>
+                        <div class="progress-bar" style="border: 3px solid var(--tinta-preta); height: 25px; background: #e0e0e0;">
+                            <div id="progress-fill" class="progress-fill" style="background: var(--alerta-vermelho); height: 100%; width: 0%; transition: width 0.4s ease;"></div>
+                        </div>
+                        <div class="phase-navigation" style="display: flex; justify-content: center; gap: 15px; margin-top: 15px;">
+                            <button id="btn-prev-phase" class="neo-btn btn-white" style="width: 45px; height: 45px; font-size: 20px; padding: 0;" onclick="voltarFase()">◀</button>
+                            <button id="btn-next-phase" class="neo-btn btn-white" style="width: 45px; height: 45px; font-size: 20px; padding: 0;" onclick="avancarFase()">▶</button>
+                        </div>
+                    </div>
+
                     <div class="timeline-controls neo-timeline">
                         <button id="btn-fase-0" class="neo-tab active" onclick="setPhase(0, this)">0. Início</button>
                         <button id="btn-fase-1" class="neo-tab" onclick="setPhase(1, this)" disabled>1. O Choque</button>
@@ -104,11 +119,9 @@
 
             </div>
             
-            <!-- MODAIS DOS MINIGAMES -->
             <div class="minigame-modal-overlay" id="minigame-modal-overlay">
                 <div class="minigame-card-center neo-card">
                     
-                    <!-- CABEÇALHO DO DESAFIO TOTALMENTE REFORMULADO -->
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--tinta-preta); padding-bottom: 20px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
                         
                         <div style="display: flex; align-items: center; gap: 15px; background: var(--papel-fundo); padding: 15px; border: 4px solid var(--tinta-preta); box-shadow: 4px 4px 0 var(--tinta-preta);">
