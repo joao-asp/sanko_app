@@ -38,25 +38,52 @@
 
     <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
     
+    <!-- SISTEMA DE NOTIFICAÇÕES -->
     <div id="toast-container" aria-live="polite"></div>
     <div id="game-notification" class="game-notification">
         <div id="game-notification-content"></div>
     </div>
 
     <div class="content-viewport">
+        <!-- ABA DO MAPA -->
         <div id="mapa-comemorativo" class="page-view">
             <div id="real-map"></div>
-            <div class="conquista-panel neo-card">
+            
+            <!-- PAINEL FIXAR MEMÓRIA -->
+            <div class="conquista-panel neo-card p-20" style="background: var(--destaque-amarelo);">
                 <h3 style="font-family: var(--fonte-manchete); font-size: 24px; margin-bottom: 10px; text-transform: uppercase;">Fixar Memória</h3>
                 <div class="form-group"><label>Título da Vitória</label><input type="text" id="form-title" placeholder="Ex: Mutirão..."></div>
                 <div class="form-group"><label>Relato Histórico</label><textarea id="form-desc" rows="3" placeholder="Conte como a comunidade se uniu..."></textarea></div>
-                <button class="neo-btn btn-black w-100" onclick="addUserConquista()">CRAVAR NO MAPA</button>
+                <button class="neo-btn btn-black w-100 mt-10" onclick="addUserConquista()">CRAVAR NO MAPA</button>
+            </div>
+            
+            <!-- MODAL DO CARROSSEL DE MEMÓRIAS -->
+            <div id="conquista-modal" class="modal-overlay">
+                <div class="conquista-card-detail neo-card p-0">
+                    <button class="modal-close" onclick="closeMapModal()">X</button>
+                    <div class="carousel-container">
+                        <button class="carousel-btn btn-prev" onclick="moveCarousel(-1)">◀</button>
+                        <button class="carousel-btn btn-next" onclick="moveCarousel(1)">▶</button>
+                        <div class="carousel-track" id="carousel-track">
+                            <div class="carousel-slide"><div class="slide-placeholder-box"><span>FOTO 1</span></div><span class="slide-caption" id="cap-1">Lâmina 1</span></div>
+                            <div class="carousel-slide"><div class="slide-placeholder-box"><span>FOTO 2</span></div><span class="slide-caption" id="cap-2">Lâmina 2</span></div>
+                            <div class="carousel-slide"><div class="slide-placeholder-box"><span>FOTO 3</span></div><span class="slide-caption" id="cap-3">Lâmina 3</span></div>
+                        </div>
+                    </div>
+                    <div class="detail-body">
+                        <h2 id="modal-title" class="detail-title">Título</h2>
+                        <div id="modal-meta" class="detail-meta">Categoria</div>
+                        <p id="modal-text" class="detail-text">Descrição</p>
+                    </div>
+                </div>
             </div>
         </div>
 
+        <!-- ABA DO JOGO (RPG MESTRE) -->
         <div id="modo-jogo" class="page-view active">
             <div class="rpg-layout">
                 
+                <!-- BARRA LATERAL FIXA -->
                 <aside class="rpg-sidebar">
                     <div class="neo-card bg-black text-center p-20">
                         <div class="neo-label text-yellow">FORÇA COMUNITÁRIA</div>
@@ -80,8 +107,10 @@
                     </div>
                 </aside>
 
+                <!-- ÁREA PRINCIPAL -->
                 <main class="rpg-main">
 
+                    <!-- BARRA DE PROGRESSO -->
                     <div class="progress-container neo-card mb-20" style="margin-bottom: 20px; padding: 15px;">
                         <div class="progress-header">
                             <span id="current-phase-label">Fase 0 de 6</span>
@@ -119,9 +148,11 @@
 
             </div>
             
+            <!-- MODAIS DOS MINIGAMES -->
             <div class="minigame-modal-overlay" id="minigame-modal-overlay">
                 <div class="minigame-card-center neo-card">
                     
+                    <!-- CABEÇALHO DO DESAFIO -->
                     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--tinta-preta); padding-bottom: 20px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
                         
                         <div style="display: flex; align-items: center; gap: 15px; background: var(--papel-fundo); padding: 15px; border: 4px solid var(--tinta-preta); box-shadow: 4px 4px 0 var(--tinta-preta);">

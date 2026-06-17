@@ -1,19 +1,21 @@
 let map;
+
+// --- SISTEMA DO MAPA E SALVAMENTO LOCAL ---
 function initMap() {
     if(map) return;
+    
     map = L.map('real-map').setView([-22.892, -47.120], 14);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; SANKO' }).addTo(map);
     
-    const createIcon = (l, c) => L.divIcon({ 
+    const createIcon = (l, c, textCol = 'white') => L.divIcon({ 
         className: 'custom-pin', 
-        html: `<div class="pin-icon" style="background:${c};"><i>${l}</i></div><div class="pin-pulse"></div>`, 
+        html: `<div class="pin-icon" style="background:${c}; border: 3px solid var(--tinta-preta);"><i style="color:${textCol}">${l}</i></div><div class="pin-pulse"></div>`, 
         iconSize: [36,36], 
         iconAnchor: [18,36],
         popupAnchor: [0, -40]
     });
     
     const markerEscola = L.marker([-22.890, -47.122], {icon: createIcon('E', 'var(--alerta-vermelho)')}).addTo(map);
-
     const popupContent = `
         <div class="map-popup-neo">
             <h4>Escola Rita de Cássia</h4>
@@ -21,8 +23,80 @@ function initMap() {
             <button class="neo-btn btn-black w-100 mt-10" style="padding: 10px; font-size: 14px;" onclick="iniciarJogoPeloMapa()">JOGAR ESTA HISTÓRIA</button>
         </div>
     `;
-    
     markerEscola.bindPopup(popupContent);
+
+    carregarMemoriasSalvas();
+}
+
+function addUserConquista() {
+    const title = document.getElementById('form-title').value.trim();
+    const desc = document.getElementById('form-desc').value.trim();
+
+    if(!title || !desc) {
+        showToast("Preencha o título e a história!", "error");
+        return;
+    }
+
+    const center = map.getCenter();
+    const lat = center.lat + (Math.random() - 0.5) * 0.008;
+    const lng = center.lng + (Math.random() - 0.5) * 0.008;
+
+    const novaMemoria = { id: Date.now(), title, desc, lat, lng };
+
+    let salvas = JSON.parse(localStorage.getItem('sanko_memorias')) || [];
+    salvas.push(novaMemoria);
+    localStorage.setItem('sanko_memorias', JSON.stringify(salvas));
+
+    adicionarPinDeMemoria(novaMemoria);
+
+    document.getElementById('form-title').value = '';
+    document.getElementById('form-desc').value = '';
+    showToast("Memória cravada no mapa!", "success");
+}
+
+function carregarMemoriasSalvas() {
+    let salvas = JSON.parse(localStorage.getItem('sanko_memorias')) || [];
+    salvas.forEach(memoria => adicionarPinDeMemoria(memoria));
+}
+
+function adicionarPinDeMemoria(memoria) {
+    const createIconMemoria = () => L.divIcon({ 
+        className: 'custom-pin', 
+        html: `<div class="pin-icon" style="background:var(--destaque-amarelo); border: 3px solid var(--tinta-preta);"><i style="color:var(--tinta-preta);">!</i></div><div class="pin-pulse" style="background: rgba(255,213,0,0.5);"></div>`, 
+        iconSize: [36,36], 
+        iconAnchor: [18,36]
+    });
+
+    const marker = L.marker([memoria.lat, memoria.lng], {icon: createIconMemoria()}).addTo(map);
+
+    marker.on('click', () => {
+        abrirModalMemoria(memoria.title, memoria.desc);
+    });
+}
+
+// --- CONTROLE DO MODAL DE MEMÓRIAS (CARROSSEL) ---
+function abrirModalMemoria(titulo, desc) {
+    document.getElementById('modal-title').innerText = titulo;
+    document.getElementById('modal-text').innerText = desc;
+    document.getElementById('modal-meta').innerText = "Relato da Comunidade";
+    document.getElementById('conquista-modal').classList.add('active');
+}
+
+function closeMapModal() {
+    document.getElementById('conquista-modal').classList.remove('active');
+}
+
+let currentSlide = 0;
+function moveCarousel(direction) {
+    const track = document.getElementById('carousel-track');
+    const slides = document.querySelectorAll('.carousel-slide');
+    if(!track || slides.length === 0) return;
+    
+    currentSlide += direction;
+    if(currentSlide < 0) currentSlide = slides.length - 1;
+    if(currentSlide >= slides.length) currentSlide = 0;
+    
+    track.style.transform = `translateX(-${currentSlide * 33.333}%)`;
 }
 
 function iniciarJogoPeloMapa() {
@@ -57,7 +131,6 @@ function showToast(msg, type = 'success') {
     setTimeout(() => { if(toast.parentNode) toast.parentNode.removeChild(toast); }, 4000);
 }
 
-// NOTIFICAÇÃO CENTRAL (MATHEUS)
 function showNotification(message, duration = 4000) {
     const notification = document.getElementById('game-notification');
     const content = document.getElementById('game-notification-content');
@@ -85,7 +158,6 @@ function adjustFC(amount) {
     else showToast(`${amount} Força Comunitária!`, 'error');
 }
 
-// BARRA DE PROGRESSO (MATHEUS)
 function atualizarBarraProgresso(faseAtualizada) {
     const totalFases = 6;
     const porcentagem = (faseAtualizada / totalFases) * 100;
@@ -181,7 +253,6 @@ function concluirRodada(faseAtualDaRodada, pontos = 300) {
     atualizarBotoesNavegacao();
 }
 
-// --- SINCRONIA DE CRONÔMETRO ---
 function syncTimers(source) {
     if(source === 'main') {
         const m = document.getElementById('timer-min').value;
@@ -282,7 +353,6 @@ function updateTimerDisplay() {
     if(document.getElementById('modal-timer-display')) document.getElementById('modal-timer-display').innerText = timeStr;
 }
 
-// --- MINIGAMES ---
 let activeGameType = null;
 let availableGames = ['quiz', 'naval', 'quem-sou-eu', 'codigo', 'memoria'];
 
@@ -433,7 +503,6 @@ function flipMemoryCard(cardEl) {
     }
 }
 
-// --- CARREGAMENTO DINÂMICO DE FASES ---
 async function carregarFases() {
     try {
         const resposta = await fetch('fases.json');
@@ -459,7 +528,6 @@ async function carregarFases() {
         const initialFcDisplay = document.getElementById('rpg-fc-display');
         if(initialFcDisplay) initialFcDisplay.innerText = currentFC;
 
-        // Desbloqueia as abas corretas baseadas no progresso salvo
         for (let i = 1; i <= 6; i++) {
             let btn = document.getElementById('btn-fase-' + i);
             if (btn) {
@@ -468,7 +536,6 @@ async function carregarFases() {
             }
         }
         
-        // Define a fase inicial na tela e atualiza a barra de progresso do Matheus
         let faseAtiva = Math.max(0, Math.min(faseMaxConcluida + 1, 6));
         setPhase(faseAtiva);
 
