@@ -1,58 +1,8 @@
-[
-  {
-    "id": 0,
-    "ano": "199X",
-    "titulo": "0. O Contexto",
-    "narrativa": "Apresente o projeto aos jogadores. Todos vivem no bairro e compartilham de suas histórias e conquistas. Como vocês se organizam antes da tempestade?",
-    "botao_texto": "⭐ INICIAR JOGO ⭐",
-    "botao_acao": "concluirRodada(0, 0)"
-  },
-  {
-    "id": 1,
-    "ano": "1990",
-    "titulo": "1. O Crescimento Desordenado",
-    "narrativa": "Nos anos 1990, muita gente se mudou para a região. Com isso, o bairro nasceu cheio de problemas, pois criado de forma desorganizada, sem infraestrutura e faltava tudo. Não tinha escola, posto de saúde, rua asfaltada. A população se juntou para pedir melhorias.<br><br><b>Desafio:</b> O que você acha que as pessoas pediam naquela época?",
-    "botao_texto": "⭐ CONCLUIR RODADA 1 (+300 FORÇA) ⭐",
-    "botao_acao": "concluirRodada(1, 300)"
-  },
-  {
-    "id": 2,
-    "ano": "1995",
-    "titulo": "2. A Falta do Ensino Médio",
-    "narrativa": "Depois de muita luta, o bairro conseguiu creche, escola de nível fundamental, posto de saúde, passarela, asfalto, esgoto etc. Mas ainda faltava uma coisa importante: não tinha escola de ensino médio no bairro. Quem queria estudar tinha que ir até o bairro Rosolem, em Hortolândia.<br><br><b>Desafio:</b> Se vocês precisassem pedir uma escola de ensino médio pro bairro hoje, como fariam?",
-    "botao_texto": "⭐ CONCLUIR RODADA 2 (+300 FORÇA) ⭐",
-    "botao_acao": "concluirRodada(2, 300)"
-  },
-  {
-    "id": 3,
-    "ano": "1998",
-    "titulo": "3. O Abaixo-Assinado",
-    "narrativa": "Para conseguir a escola Profa. Rita de Cássia, a galera fez abaixo-assinado e protestos. E não foram só os moradores do Parque São Jorge que participaram, pessoas de outros bairros também entraram na luta.<br><br><b>Desafio:</b> Quem mais se juntou para ajudar a conquistar a escola?",
-    "botao_texto": "⭐ CONCLUIR RODADA 3 (+300 FORÇA) ⭐",
-    "botao_acao": "concluirRodada(3, 300)"
-  },
-  {
-    "id": 4,
-    "ano": "199X",
-    "titulo": "4. A União dos Bairros",
-    "narrativa": "A escola só saiu porque a população e várias associações de moradores se uniram: Jardim Eulina, Vila Boa Vista, Parque Fazendinha e Parque Santa Bárbara.<br><br><b>Desafio:</b> Com quem eles foram falar para conseguir a escola? Pense: quem tem o poder de construir uma escola pública?",
-    "botao_texto": "⭐ CONCLUIR RODADA 4 (+300 FORÇA) ⭐",
-    "botao_acao": "concluirRodada(4, 300)"
-  },
-  {
-    "id": 5,
-    "ano": "1999",
-    "titulo": "5. A Pressão e a Viagem",
-    "narrativa": "Os moradores não ficaram só esperando. Eles foram pessoalmente até a Diretoria de Ensino em Campinas e em São Paulo para cobrar. Depois de muita pressão, o governo se comprometeu a construir a escola no Parque São Jorge.<br><br><b>Desafio:</b> Agora que vocês conhecem essa história, quais problemas vocês acham que ainda precisam ser resolvidos?",
-    "botao_texto": "⭐ CONCLUIR RODADA 5 (+300 FORÇA) ⭐",
-    "botao_acao": "concluirRodada(5, 300)"
-  },
-  {
-    "id": 6,
-    "ano": "2000",
-    "titulo": "6. A Vitória e o Futuro",
-    "narrativa": "Escola, posto de saúde, passarela... nada disso apareceu do nada. Tudo veio porque a população se organizou e cobrou. Vocês acabaram de pensar em novas necessidades do bairro. E elas também não vão se resolver sozinhas.<br><br>Fazer política não é só votar a cada 2 anos. Política é agir no dia a dia para melhorar a vida da sua comunidade. Se outras pessoas como vocês conseguiram mudar o bairro no passado, vocês também conseguem!<br><br>Como será feito? Vocês é que tem que pensar. E pensar juntos. Vocês são parte desta história e ela nunca para!",
-    "botao_texto": "🏆 FINALIZAR PROJETO SANKO 🏆",
-    "botao_acao": "alert('PARABÉNS! VOCÊS VENCERAM E CONSTRUÍRAM A ESCOLA RITA DE CÁSSIA!')"
-  }
-]
+version: '3.8'
+services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
