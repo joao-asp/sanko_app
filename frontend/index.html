@@ -121,22 +121,9 @@
 
                 <main class="rpg-main">
 
-                    <div class="progress-container neo-card mb-20" style="margin-bottom: 20px; padding: 15px;">
-                        <div class="progress-header">
-                            <span id="current-phase-label">Fase 0 de 6</span>
-                            <span id="progress-percent">0%</span>
-                        </div>
-                        <div class="progress-bar" style="border: 3px solid var(--tinta-preta); height: 25px; background: #e0e0e0;">
-                            <div id="progress-fill" class="progress-fill" style="background: var(--alerta-vermelho); height: 100%; width: 0%; transition: width 0.4s ease;"></div>
-                        </div>
-                        <div class="phase-navigation" style="display: flex; justify-content: center; gap: 15px; margin-top: 15px;">
-                            <button id="btn-prev-phase" class="neo-btn btn-white" style="width: 45px; height: 45px; font-size: 20px; padding: 0;" onclick="voltarFase()">◀</button>
-                            <button id="btn-next-phase" class="neo-btn btn-white" style="width: 45px; height: 45px; font-size: 20px; padding: 0;" onclick="avancarFase()">▶</button>
-                        </div>
-                    </div>
-
                     <div class="timeline-controls neo-timeline" id="timeline-tabs-container">
-                        </div>
+                        <!-- As abas virão do fases.json -->
+                    </div>
 
                     <div id="fases-container"></div>
 
@@ -175,7 +162,7 @@
                         <p style="font-family: var(--fonte-documento); font-weight: bold; margin-bottom:16px;">Mestre, valide a resposta da equipe baseada na sua tela!</p>
                         
                         <div id="quiz-questions-container">
-                            </div>
+                        </div>
 
                         <button class="neo-btn btn-black w-100 mt-15 btn-claim visible" onclick="addPoints(300)">CONFIRMAR +300 FORÇA</button>
                     </div>
