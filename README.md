@@ -10,13 +10,13 @@
 
 O projeto foi criado como parte do [Crialab do Minha Campinas](https://www.minhacampinas.org/crialab), com financiamento da **Fundação FEAC**. A ferramenta nasceu com o objetivo inicial de resgatar e preservar a história de luta da comunidade pela construção da Escola Estadual Profa. Rita de Cássia da Silva, no Parque São Jorge (Campinas-SP). No entanto, o Sanko foi arquitetado de forma aberta e personalizável, para que possa **acolher e contar as histórias de lutas e conquistas de qualquer outra comunidade**.
 
-A interface adota um estilo Neo-brutalista, projetada para ser exibida em um telão ou projetor, guiando os jogadores através de fases históricas, gerenciando recursos (Força Comunitária), cronometrando debates e lançando minigames dinâmicos.
+A interface adota um estilo inspirado em jornais antigos, projetada para ser exibida em um telão ou projetor, guiando os jogadores através de fases históricas, gerenciando recursos (Força Comunitária), cronometrando debates e lançando minigames dinâmicos.
 
 ---
 
 ## Sobre o Projeto
 
-O jogo funciona como uma ferramenta de facilitação, gamificação educacional e engajamento comunitário. Ele conduz os participantes por uma linha do tempo onde desafios do passado são apresentados, exigindo debate, união e tomada de decisão para que a comunidade (os jogadores) avance e garanta melhorias para o bairro.
+O jogo funciona como uma ferramenta de facilitação, jogo educacional e engajamento comunitário. Ele conduz os participantes por uma linha do tempo onde desafios do passado são apresentados, exigindo debate, união e tomada de decisão para que a comunidade (os jogadores) avance e garanta melhorias para o bairro.
 
 ---
 
@@ -47,6 +47,7 @@ O jogo funciona como uma ferramenta de facilitação, gamificação educacional 
 ## Estrutura do Projeto
 
 ```text
+
 /sanko
 │
 ├── index.html               # Estrutura principal da aplicação
@@ -56,12 +57,10 @@ O jogo funciona como uma ferramenta de facilitação, gamificação educacional 
 ├── minigames.json           # Banco de palavras e personagens dos minigames
 │
 ├── css/
-│   └── style.css            # Estilização Neo-brutalista
+│   └── style.css            # Estilização conforme Identidade Visual
 │
 ├── js/
 │   └── script.js            # Lógica principal, timers e minigames
 │
 └── assets/                  # Pasta para imagens, fotos do carrossel e logo
-    ├── logo.png             # Logo da aplicação
-    ├── foto1.jpg
-    └── foto2.jpg
+    └── logo.png             # Logo da aplicação
