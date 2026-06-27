@@ -2,6 +2,7 @@
 .DS_Store
 Thumbs.db
 *~
+codigo_completo.txt
 
 # Se futuramente você for usar node, já deixa engatilhado
 node_modules/
