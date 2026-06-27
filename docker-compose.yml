@@ -1,8 +1,17 @@
 version: '3.8'
 services:
   web:
-    image: nginx:alpine
+    image: caddy:alpine
+    restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
     volumes:
-      - ./frontend:/usr/share/nginx/html
+      - ./frontend:/usr/share/caddy
+      - caddy_data:/data
+      - caddy_config:/config
+    command: caddy file-server --domain sanko.app.br --root /usr/share/caddy
+
+volumes:
+  caddy_data:
+  caddy_config:
