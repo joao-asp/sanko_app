@@ -2,7 +2,7 @@ let map;
 let marcadorTemporario = null;
 let localSelecionado = null;
 
-// --- SISTEMA DO MAPA E SALVAMENTO LOCAL ---
+// --- SISTEMA DO MAPA E SALVAMENTO LOCAL/API ---
 function initMap() {
     if(map) return;
     
@@ -17,7 +17,7 @@ function initMap() {
         popupAnchor: [0, -40]
     });
     
-    const markerEscola = L.marker([-22.890, -47.122], {icon: createIcon('E', 'var(--alerta-vermelho)')}).addTo(map);
+    const markerEscola = L.marker([-22.890, -47.122], {icon: createIcon('★', 'var(--alerta-vermelho)', 'white')}).addTo(map);
     
     // Ao invés do popup nativo, abrimos o Modal rico com Carrossel
     markerEscola.on('click', () => {
@@ -55,7 +55,7 @@ function initMap() {
     carregarMemoriasSalvas();
 }
 
-function addUserConquista() {
+async function addUserConquista() {
     const title = document.getElementById('form-title').value.trim();
     const desc = document.getElementById('form-desc').value.trim();
 
@@ -69,37 +69,73 @@ function addUserConquista() {
         return;
     }
 
+    const btn = document.querySelector('.conquista-panel .btn-black');
+    const originalText = btn.innerText;
+    btn.innerText = "SALVANDO...";
+    btn.disabled = true;
+
     const cores = ['#ffd500', '#d90429', '#2b9348', '#3a86ff', '#ff006e', '#00bbf9'];
     const corSorteada = cores[Math.floor(Math.random() * cores.length)];
 
-    const novaMemoria = { 
-        id: Date.now(), 
-        title, 
-        desc, 
-        lat: localSelecionado.lat, 
+    // PAYLOAD ATUALIZADO (ITEM C)
+    const payload = {
+        titulo: title,
+        descricao: desc,
+        lat: localSelecionado.lat,
         lng: localSelecionado.lng,
         cor: corSorteada
     };
 
-    let salvas = JSON.parse(localStorage.getItem('sanko_memorias')) || [];
-    salvas.push(novaMemoria);
-    localStorage.setItem('sanko_memorias', JSON.stringify(salvas));
+    try {
+        const response = await fetch('http://localhost:3000/api/pins', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
 
-    adicionarPinDeMemoria(novaMemoria);
+        if (!response.ok) throw new Error("Erro na moderação ou servidor");
 
-    document.getElementById('form-title').value = '';
-    document.getElementById('form-desc').value = '';
-    if(marcadorTemporario) {
-        map.removeLayer(marcadorTemporario);
-        marcadorTemporario = null;
-        localSelecionado = null;
+        const result = await response.json();
+        const novoPin = result.pinSalvo || payload; // Pega o pin retornado do backend
+        
+        adicionarPinDeMemoria(novoPin);
+
+        document.getElementById('form-title').value = '';
+        document.getElementById('form-desc').value = '';
+        const fileInput = document.getElementById('form-file');
+        if(fileInput) fileInput.value = ''; // Limpa o input de arquivo também
+
+        if(marcadorTemporario) {
+            map.removeLayer(marcadorTemporario);
+            marcadorTemporario = null;
+            localSelecionado = null;
+        }
+        showToast("Memória cravada no mapa!", "success");
+    } catch (error) {
+        console.error(error);
+        showToast("Erro ao cravar memória. Verifique a conexão.", "error");
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
     }
-    showToast("Memória cravada no mapa!", "success");
 }
 
-function carregarMemoriasSalvas() {
-    let salvas = JSON.parse(localStorage.getItem('sanko_memorias')) || [];
-    salvas.forEach(memoria => adicionarPinDeMemoria(memoria));
+async function carregarMemoriasSalvas() {
+    try {
+        const response = await fetch('http://localhost:3000/api/pins');
+        if (response.ok) {
+            const pinsDB = await response.json();
+            pinsDB.forEach(memoria => adicionarPinDeMemoria(memoria));
+        } else {
+            // Fallback temporário para localStorage caso a API falhe/não exista ainda
+            let salvas = JSON.parse(localStorage.getItem('sanko_memorias')) || [];
+            salvas.forEach(memoria => adicionarPinDeMemoria(memoria));
+        }
+    } catch (err) {
+        console.error("Erro ao carregar pins da API, usando local", err);
+        let salvas = JSON.parse(localStorage.getItem('sanko_memorias')) || [];
+        salvas.forEach(memoria => adicionarPinDeMemoria(memoria));
+    }
 }
 
 function adicionarPinDeMemoria(memoria) {
@@ -114,8 +150,9 @@ function adicionarPinDeMemoria(memoria) {
 
     const marker = L.marker([memoria.lat, memoria.lng], {icon: createIconMemoria()}).addTo(map);
 
+    // Aceita tanto title/desc (antigo) quanto titulo/descricao (backend)
     marker.on('click', () => {
-        abrirModalMemoria(memoria.title, memoria.desc);
+        abrirModalMemoria(memoria.title || memoria.titulo, memoria.desc || memoria.descricao);
     });
 }
 
@@ -413,14 +450,27 @@ function setupAndOpenGame(type) {
                 p.innerText = q.pergunta;
                 divObj.appendChild(p);
 
+                // ATUALIZAÇÃO DO QUIZ: Oculta resposta e mostra no clique
                 q.opcoes.forEach((op, idx) => {
                     let label = document.createElement('label');
                     label.className = 'quiz-item';
                     label.style.border = '2px solid var(--tinta-preta)';
                     label.style.background = 'white';
+                    label.style.cursor = 'pointer';
                     
-                    let marcaCorreta = idx === q.correta ? ' <strong style="color:var(--cor-acerto-verde); margin-left: 10px;">[CORRETA]</strong>' : '';
-                    label.innerHTML = `<input type="checkbox"> ${op} ${marcaCorreta}`;
+                    label.innerHTML = `<span>${op}</span>`;
+                    
+                    label.onclick = function() {
+                        if(idx === q.correta) {
+                            this.style.background = 'var(--cor-acerto-verde)';
+                            this.style.color = 'white';
+                            this.innerHTML = `<span>${op}</span> <strong style="margin-left: 10px;">[CORRETA]</strong>`;
+                        } else {
+                            this.style.background = 'var(--alerta-vermelho)';
+                            this.style.color = 'white';
+                            this.innerHTML = `<span>${op}</span> <strong style="margin-left: 10px;">[ERRADA]</strong>`;
+                        }
+                    };
                     divObj.appendChild(label);
                 });
                 containerQuiz.appendChild(divObj);

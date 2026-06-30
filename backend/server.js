@@ -1,13 +1,20 @@
 const http = require('node:http');
 const { URL } = require('node:url');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const PORT = Number(process.env.PORT || 3000);
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
 const ALLOWED_ORIGINS = new Set([
   process.env.CORS_ORIGIN || 'http://localhost',
-  'http://127.0.0.1'
+  'http://127.0.0.1',
+  'http://localhost:5500',
+  'http://127.0.0.1:5500'
 ]);
+
+// Arquivo local onde as histórias serão salvas temporariamente na EC2
+const PINS_FILE = path.join(__dirname, 'pins_salvos.json');
 
 function isAllowedOrigin(origin) {
   return Boolean(origin) && ALLOWED_ORIGINS.has(origin);
@@ -15,7 +22,7 @@ function isAllowedOrigin(origin) {
 
 function withCorsHeaders(origin) {
   const headers = {
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Content-Type': 'application/json; charset=utf-8'
   };
@@ -159,46 +166,93 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (requestUrl.pathname !== '/api/validate-pin' || req.method !== 'POST') {
-    sendJson(res, 404, { error: 'Not Found' }, origin);
+  // --- ROTA GET: CARREGAR O MAPA ---
+  if (requestUrl.pathname === '/api/pins' && req.method === 'GET') {
+    try {
+      let salvos = [];
+      if (fs.existsSync(PINS_FILE)) {
+        salvos = JSON.parse(fs.readFileSync(PINS_FILE, 'utf8'));
+      }
+      sendJson(res, 200, salvos, origin);
+    } catch (error) {
+      console.error("[ERRO GET PINS]", error);
+      sendJson(res, 500, { error: 'Erro ao ler arquivo de pins local' }, origin);
+    }
     return;
   }
 
-  try {
-    const rawBody = await readBody(req);
-    let payload = {};
+  // --- ROTA POST: VALIDAR E SALVAR NOVA HISTÓRIA ---
+  if (requestUrl.pathname === '/api/pins' && req.method === 'POST') {
+    try {
+      const rawBody = await readBody(req);
+      let payload = {};
 
-    if (rawBody) {
-      payload = JSON.parse(rawBody);
+      if (rawBody) {
+        payload = JSON.parse(rawBody);
+      }
+
+      const titulo = typeof payload.titulo === 'string' ? payload.titulo.trim() : '';
+      const descricao = typeof payload.descricao === 'string' ? payload.descricao.trim() : '';
+
+      if (!titulo || !descricao) {
+        sendJson(res, 400, { error: 'titulo e descricao são obrigatórios' }, origin);
+        return;
+      }
+
+      if (titulo.length > 180 || descricao.length > 4000) {
+        sendJson(res, 400, { error: 'titulo ou descricao excede o tamanho permitido' }, origin);
+        return;
+      }
+
+      // Validação da IA
+      const result = await validateWithOpenRouter(titulo, descricao);
+      console.log(`\n[VALIDAÇÃO] Título: "${titulo}" | Aprovado: ${result.aprovado} | Motivo: ${result.motivo}`);
+
+      // Se a IA rejeitou, devolve erro 400 para o frontend mostrar o Toast vermelho
+      if (!result.aprovado) {
+        sendJson(res, 400, { error: 'História rejeitada pela moderação', motivo: result.motivo }, origin);
+        return;
+      }
+
+      // Se passou, lê o arquivo, adiciona o pin novo e salva
+      let salvos = [];
+      try {
+        if (fs.existsSync(PINS_FILE)) {
+          salvos = JSON.parse(fs.readFileSync(PINS_FILE, 'utf8'));
+        }
+      } catch (e) {
+        console.error("Erro ao ler JSON local antes de salvar", e);
+      }
+      
+      const novoPin = {
+        id: Date.now(),
+        titulo: titulo,
+        descricao: descricao,
+        lat: payload.lat || 0,
+        lng: payload.lng || 0,
+        cor: payload.cor || '#ffd500',
+        data: new Date().toISOString()
+      };
+      
+      salvos.push(novoPin);
+      fs.writeFileSync(PINS_FILE, JSON.stringify(salvos, null, 2));
+      
+      result.pinSalvo = novoPin;
+      
+      sendJson(res, 201, result, origin);
+    } catch (error) {
+      console.error("\n[ERRO NA API]", error.message);
+      const statusCode = error.statusCode || 500;
+      sendJson(res, statusCode, {
+        error: 'Falha ao validar ou salvar contribuição',
+        detalhe: error.message
+      }, origin);
     }
-
-    const titulo = typeof payload.titulo === 'string' ? payload.titulo.trim() : '';
-    const descricao = typeof payload.descricao === 'string' ? payload.descricao.trim() : '';
-
-    if (!titulo || !descricao) {
-      sendJson(res, 400, { error: 'titulo e descricao são obrigatórios' }, origin);
-      return;
-    }
-
-    if (titulo.length > 180 || descricao.length > 4000) {
-      sendJson(res, 400, { error: 'titulo ou descricao excede o tamanho permitido' }, origin);
-      return;
-    }
-
-    const result = await validateWithOpenRouter(titulo, descricao);
-    
-    // LOG ADICIONADO PARA O TERMINAL:
-    console.log(`\n[VALIDAÇÃO] Título: "${titulo}" | Aprovado: ${result.aprovado} | Motivo: ${result.motivo}`);
-    
-    sendJson(res, 200, result, origin);
-  } catch (error) {
-    console.error("\n[ERRO NA API]", error.message);
-    const statusCode = error.statusCode || 500;
-    sendJson(res, statusCode, {
-      error: 'Falha ao validar contribuição',
-      detalhe: error.message
-    }, origin);
+    return;
   }
+
+  // Fallback para qualquer outra rota
+  sendJson(res, 404, { error: 'Not Found' }, origin);
 });
 
 server.listen(PORT, '0.0.0.0', () => {

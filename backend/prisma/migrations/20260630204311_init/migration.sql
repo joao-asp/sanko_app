@@ -1,0 +1,10 @@
+-- CreateTable
+CREATE TABLE "Pin" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "titulo" TEXT NOT NULL,
+    "descricao" TEXT NOT NULL,
+    "lat" REAL NOT NULL,
+    "lng" REAL NOT NULL,
+    "cor" TEXT NOT NULL DEFAULT '#ffd500',
+    "data" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

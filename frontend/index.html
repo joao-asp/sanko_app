@@ -17,7 +17,7 @@
 
     <nav>
         <div class="nav-logo">
-        <img src="assets/logo.png" alt="Logo do Jogo" style="height: 40px;">
+            <img src="assets/logo.png" alt="Sanko" style="height: 40px;">
         </div>
 
         <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
@@ -36,13 +36,32 @@
         <div id="mapa-comemorativo" class="page-view active">
             <div id="real-map"></div>
             
+            <!-- PAINEL REFORMULADO: SEM TEXTO VERMELHO, SEM BOTÃO DE ZERAR E COM TEXTO SIMPLES -->
             <div class="conquista-panel neo-card p-20" style="background: var(--destaque-amarelo);">
-                <h3 style="font-family: var(--fonte-manchete); font-size: 24px; margin-bottom: 5px; text-transform: uppercase;">Fixar Memória</h3>
-                <p style="font-family: var(--fonte-documento); font-size: 12px; font-weight: bold; margin-bottom: 12px; color: var(--alerta-vermelho);">1º Clique em um local do mapa</p>
-                <div class="form-group"><label>2º Título da Vitória</label><input type="text" id="form-title" placeholder="Ex: Mutirão..."></div>
-                <div class="form-group"><label>3º Relato Histórico</label><textarea id="form-desc" rows="3" placeholder="Conte como a comunidade se uniu..."></textarea></div>
-                <button class="neo-btn btn-black w-100 mt-10" onclick="addUserConquista()">CRAVAR NO MAPA</button>
-                <button class="neo-btn btn-white w-100 mt-10" onclick="limparMapa()">Zerar Mapa</button>
+                <h3 style="font-family: var(--fonte-manchete); font-size: 26px; margin-bottom: 2px; text-transform: uppercase;">Registrar Marco</h3>
+                <p style="font-family: var(--fonte-documento); font-size: 12px; font-weight: bold; margin-bottom: 15px; color: var(--tinta-preta); opacity: 0.7;">
+                    📍 Clique no mapa para escolher o lugar
+                </p>
+                
+                <div class="form-group">
+                    <label>Nome da Conquista</label>
+                    <input type="text" id="form-title" placeholder="Ex: Mutirão do Asfalto, Luta pela Creche...">
+                </div>
+                
+                <div class="form-group">
+                    <label>História do Bairro</label>
+                    <textarea id="form-desc" rows="3" placeholder="Conte o que aconteceu e como os moradores se uniram..."></textarea>
+                </div>
+
+                <!-- NOVO CAMPO DE UPLOAD DE FOTO -->
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Anexar Foto (Opcional)</label>
+                    <input type="file" id="form-file" accept="image/*" style="width: 100%; border: 2px solid var(--tinta-preta); padding: 5px; background: white; font-family: var(--fonte-documento); font-size: 12px; cursor: pointer;">
+                </div>
+                
+                <button class="neo-btn btn-black w-100 mt-10" style="font-size: 18px;" onclick="addUserConquista()">
+                    ETERNIZAR NO MAPA
+                </button>
             </div>
             
             <div id="conquista-modal" class="modal-overlay">
@@ -56,19 +75,19 @@
                             <div class="carousel-slide" style="background: var(--alerta-vermelho); display: flex; align-items: center; justify-content: center;">
                                 <img src="assets/foto1.jpg" onerror="this.style.display='none'" style="width: 100%; height: 100%; object-fit: cover;">
                                 <span style="position: absolute; font-family: var(--fonte-manchete); font-size: 30px; color: white; opacity: 0.5; z-index: 1; pointer-events: none;">REGISTRO 01</span>
-                                <span class="slide-caption" id="cap-1">Lâmina 1</span>
+                                <span class="slide-caption" id="cap-1">Legenda da foto 1</span>
                             </div>
                             
                             <div class="carousel-slide" style="background: var(--cor-acerto-verde); display: flex; align-items: center; justify-content: center;">
                                 <img src="assets/foto2.jpg" onerror="this.style.display='none'" style="width: 100%; height: 100%; object-fit: cover;">
                                 <span style="position: absolute; font-family: var(--fonte-manchete); font-size: 30px; color: white; opacity: 0.5; z-index: 1; pointer-events: none;">REGISTRO 02</span>
-                                <span class="slide-caption" id="cap-2">Lâmina 2</span>
+                                <span class="slide-caption" id="cap-2">Legenda da foto 2</span>
                             </div>
                             
                             <div class="carousel-slide" style="background: var(--tinta-preta); display: flex; align-items: center; justify-content: center;">
                                 <img src="assets/foto3.jpg" onerror="this.style.display='none'" style="width: 100%; height: 100%; object-fit: cover;">
                                 <span style="position: absolute; font-family: var(--fonte-manchete); font-size: 30px; color: white; opacity: 0.5; z-index: 1; pointer-events: none;">REGISTRO 03</span>
-                                <span class="slide-caption" id="cap-3">Lâmina 3</span>
+                                <span class="slide-caption" id="cap-3">Legenda da foto 3</span>
                             </div>
 
                         </div>
@@ -109,10 +128,7 @@
                 </aside>
 
                 <main class="rpg-main">
-
-                    <div class="timeline-controls neo-timeline" id="timeline-tabs-container">
-                        </div>
-
+                    <div class="timeline-controls neo-timeline" id="timeline-tabs-container"></div>
                     <div id="fases-container"></div>
 
                     <div class="neo-card mt-20 p-20">
@@ -148,10 +164,7 @@
                     <div id="game-quiz" class="game-interface">
                         <div class="game-panel-title">🧠 O Povo Tem Memória? (Quiz)</div>
                         <p style="font-family: var(--fonte-documento); font-weight: bold; margin-bottom:16px;">Mestre, valide a resposta da equipe baseada na sua tela!</p>
-                        
-                        <div id="quiz-questions-container">
-                        </div>
-
+                        <div id="quiz-questions-container"></div>
                         <button class="neo-btn btn-black w-100 mt-15 btn-claim visible" onclick="addPoints(300)">CONFIRMAR +300 FORÇA</button>
                     </div>
 

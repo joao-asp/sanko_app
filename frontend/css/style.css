@@ -255,7 +255,22 @@ nav {
 .detail-body { padding: 30px; }
 .detail-title { font-family: var(--fonte-manchete); font-size: 38px; color: var(--alerta-vermelho); margin-bottom: 4px; line-height: 1; text-transform: uppercase; }
 .detail-meta { font-family: var(--fonte-documento); font-size: 12px; font-weight: bold; background: var(--destaque-amarelo); color: var(--tinta-preta); display: inline-block; padding: 4px 8px; margin-bottom: 16px; border: 2px solid var(--tinta-preta); }
-.detail-text { font-family: var(--fonte-leitura); font-size: 16px; color: var(--tinta-preta); line-height: 1.6; }
+.detail-text { 
+    font-family: var(--fonte-leitura); 
+    font-size: 16px; 
+    color: var(--tinta-preta); 
+    line-height: 1.6; 
+    
+    /* Novas regras para comportar muito texto */
+    max-height: 220px; 
+    overflow-y: auto; 
+    padding-right: 15px; 
+}
+
+/* Deixa a barrinha de scroll com a cara do site */
+.detail-text::-webkit-scrollbar { width: 8px; }
+.detail-text::-webkit-scrollbar-track { background: transparent; border-left: 2px solid var(--tinta-preta); }
+.detail-text::-webkit-scrollbar-thumb { background: var(--alerta-vermelho); border: 2px solid var(--tinta-preta); }
 
 /* MOBILE RESPONSIVE */
 @media (max-width: 900px) {
