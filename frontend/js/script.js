@@ -18,14 +18,25 @@ function initMap() {
     });
     
     const markerEscola = L.marker([-22.890, -47.122], {icon: createIcon('E', 'var(--alerta-vermelho)')}).addTo(map);
-    const popupContent = `
-        <div class="map-popup-neo">
-            <h4>Escola Rita de Cássia</h4>
-            <p>Erguida pelas mãos da comunidade. O marco zero da nossa resistência contra o esquecimento.</p>
-            <button class="neo-btn btn-black w-100 mt-10" style="padding: 10px; font-size: 14px;" onclick="iniciarJogoPeloMapa()">JOGAR ESTA HISTÓRIA</button>
-        </div>
-    `;
-    markerEscola.bindPopup(popupContent);
+    
+    // Ao invés do popup nativo, abrimos o Modal rico com Carrossel
+    markerEscola.on('click', () => {
+        abrirModalMemoria(
+            "Escola Rita de Cássia", 
+            "Erguida pelas mãos da comunidade. O marco zero da nossa resistência contra o esquecimento."
+        );
+        // Injeta o botão de Jogo no modal especificamente para este Pin
+        const detailBody = document.querySelector('.detail-body');
+        let btnJogar = document.getElementById('btn-iniciar-campanha-modal');
+        if(!btnJogar) {
+            btnJogar = document.createElement('button');
+            btnJogar.id = 'btn-iniciar-campanha-modal';
+            btnJogar.className = 'neo-btn btn-black w-100 mt-15';
+            btnJogar.innerText = 'JOGAR ESTA HISTÓRIA';
+            btnJogar.onclick = iniciarJogoPeloMapa;
+            detailBody.appendChild(btnJogar);
+        }
+    });
 
     map.on('click', function(e) {
         localSelecionado = e.latlng;
@@ -145,7 +156,7 @@ function moveCarousel(direction) {
 }
 
 function iniciarJogoPeloMapa() {
-    map.closePopup();
+    closeMapModal();
     const btnMestre = document.querySelector('.nav-tabs .tab-btn');
     if(btnMestre) {
         btnMestre.click();
@@ -603,3 +614,6 @@ async function carregarQuiz() {
 carregarMinigames();
 carregarFases();
 carregarQuiz();
+
+// Inicia o mapa imediatamente já que ele é a aba principal agora
+initMap();
