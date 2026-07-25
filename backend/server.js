@@ -1,6 +1,7 @@
 const http = require('node:http');
 const { URL } = require('node:url');
 const { PrismaClient } = require('@prisma/client');
+const { handleUploadRoute } = require('./routes/upload');
 
 const prisma = new PrismaClient();
 
@@ -217,7 +218,6 @@ const server = http.createServer(async (req, res) => {
           cor: payload.cor || '#ffd500'
         }
       });
-      
       result.pinSalvo = novoPin;
       sendJson(res, 201, result, origin);
     } catch (error) {
@@ -275,7 +275,6 @@ const server = http.createServer(async (req, res) => {
         const errText = await response.text();
         throw new Error(`Falha OpenRouter: ${response.status} - ${errText}`);
       }
-      
       const data = await response.json();
       const historiaGerada = data.choices[0].message.content;
 
@@ -285,6 +284,12 @@ const server = http.createServer(async (req, res) => {
       console.error("[ERRO GERAÇÃO IA]", error);
       sendJson(res, 500, { error: 'Erro ao gerar história', detalhe: error.message }, origin);
     }
+    return;
+  }
+
+  // --- ROTA GET: GERAR URL PRÉ-ASSINADA (ARQUIVO SEPARADO) ---
+  if (requestUrl.pathname === '/api/upload-url' && req.method === 'GET') {
+    await handleUploadRoute(req, res, requestUrl, origin, sendJson);
     return;
   }
 
