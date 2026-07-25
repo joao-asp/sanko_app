@@ -13,4 +13,10 @@ sanko.code-workspace
 .terraform/
 *.tfstate
 *.tfstate.*
+*.tfplan
 *.tfvars
+
+# Arquivos temporários de download e instalação
+*.zip
+*.pkg
+LICENSE.txt
