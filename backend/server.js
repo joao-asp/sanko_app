@@ -1,7 +1,8 @@
 const http = require('node:http');
 const { URL } = require('node:url');
-const fs = require('node:fs');
-const path = require('node:path');
+const { PrismaClient } = require('@prisma/client');
+
+const prisma = new PrismaClient();
 
 const PORT = Number(process.env.PORT || 3000);
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
@@ -12,9 +13,6 @@ const ALLOWED_ORIGINS = new Set([
   'http://localhost:5500',
   'http://127.0.0.1:5500'
 ]);
-
-// Arquivo local onde as histórias serão salvas temporariamente na EC2
-const PINS_FILE = path.join(__dirname, 'pins_salvos.json');
 
 function isAllowedOrigin(origin) {
   return Boolean(origin) && ALLOWED_ORIGINS.has(origin);
@@ -169,14 +167,13 @@ const server = http.createServer(async (req, res) => {
   // --- ROTA GET: CARREGAR O MAPA ---
   if (requestUrl.pathname === '/api/pins' && req.method === 'GET') {
     try {
-      let salvos = [];
-      if (fs.existsSync(PINS_FILE)) {
-        salvos = JSON.parse(fs.readFileSync(PINS_FILE, 'utf8'));
-      }
+      const salvos = await prisma.pin.findMany({
+        orderBy: { data: 'desc' }
+      });
       sendJson(res, 200, salvos, origin);
     } catch (error) {
       console.error("[ERRO GET PINS]", error);
-      sendJson(res, 500, { error: 'Erro ao ler arquivo de pins local' }, origin);
+      sendJson(res, 500, { error: 'Erro ao ler banco de dados' }, origin);
     }
     return;
   }
@@ -185,11 +182,7 @@ const server = http.createServer(async (req, res) => {
   if (requestUrl.pathname === '/api/pins' && req.method === 'POST') {
     try {
       const rawBody = await readBody(req);
-      let payload = {};
-
-      if (rawBody) {
-        payload = JSON.parse(rawBody);
-      }
+      let payload = JSON.parse(rawBody || '{}');
 
       const titulo = typeof payload.titulo === 'string' ? payload.titulo.trim() : '';
       const descricao = typeof payload.descricao === 'string' ? payload.descricao.trim() : '';
@@ -214,39 +207,83 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      // Se passou, lê o arquivo, adiciona o pin novo e salva
-      let salvos = [];
-      try {
-        if (fs.existsSync(PINS_FILE)) {
-          salvos = JSON.parse(fs.readFileSync(PINS_FILE, 'utf8'));
+      // Salva no SQLite via Prisma
+      const novoPin = await prisma.pin.create({
+        data: {
+          titulo: titulo,
+          descricao: descricao,
+          lat: payload.lat || 0,
+          lng: payload.lng || 0,
+          cor: payload.cor || '#ffd500'
         }
-      } catch (e) {
-        console.error("Erro ao ler JSON local antes de salvar", e);
-      }
-      
-      const novoPin = {
-        id: Date.now(),
-        titulo: titulo,
-        descricao: descricao,
-        lat: payload.lat || 0,
-        lng: payload.lng || 0,
-        cor: payload.cor || '#ffd500',
-        data: new Date().toISOString()
-      };
-      
-      salvos.push(novoPin);
-      fs.writeFileSync(PINS_FILE, JSON.stringify(salvos, null, 2));
+      });
       
       result.pinSalvo = novoPin;
-      
       sendJson(res, 201, result, origin);
     } catch (error) {
       console.error("\n[ERRO NA API]", error.message);
-      const statusCode = error.statusCode || 500;
-      sendJson(res, statusCode, {
+      sendJson(res, error.statusCode || 500, {
         error: 'Falha ao validar ou salvar contribuição',
         detalhe: error.message
       }, origin);
+    }
+    return;
+  }
+
+  // --- ROTA POST: GERAR HISTÓRIA COM IA ---
+  if (requestUrl.pathname === '/api/generate-story' && req.method === 'POST') {
+    try {
+      const rawBody = await readBody(req);
+      let payload = JSON.parse(rawBody || '{}');
+      const topicos = typeof payload.topicos === 'string' ? payload.topicos.trim() : '';
+
+      if (!topicos) {
+        sendJson(res, 400, { error: 'Os tópicos base são obrigatórios' }, origin);
+        return;
+      }
+
+      const promptGeracao = [
+        'Você é um redator comunitário apaixonado pela história do Parque São Jorge e região (Campinas).',
+        'Sua missão é transformar os tópicos fornecidos pelo usuário em um relato envolvente, heroico e respeitoso.',
+        '',
+        'REGRAS DE FORMATAÇÃO:',
+        '1. Use Markdown para formatar o texto (use **negrito** para nomes e lugares, crie listas se necessário).',
+        '2. Mantenha um tom humano, quente e informal, como alguém contando uma história em uma roda de conversa.',
+        '3. Não invente fatos, apenas conecte e embeleze os tópicos fornecidos.',
+        '4. O texto final deve ter no máximo 3 parágrafos curtos.',
+        '',
+        'Tópicos fornecidos pelo morador:',
+        topicos
+      ].join('\n');
+
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+          'HTTP-Referer': process.env.OPENROUTER_REFERER || 'http://localhost',
+          'X-Title': process.env.OPENROUTER_TITLE || 'Sanko Story Generator'
+        },
+        body: JSON.stringify({
+          model: OPENROUTER_MODEL,
+          temperature: 0.7, 
+          messages: [{ role: 'user', content: promptGeracao }]
+        })
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Falha OpenRouter: ${response.status} - ${errText}`);
+      }
+      
+      const data = await response.json();
+      const historiaGerada = data.choices[0].message.content;
+
+      console.log(`\n[GERAÇÃO IA] Nova história gerada a partir dos tópicos: "${topicos.substring(0, 30)}..."`);
+      sendJson(res, 200, { historia: historiaGerada }, origin);
+    } catch (error) {
+      console.error("[ERRO GERAÇÃO IA]", error);
+      sendJson(res, 500, { error: 'Erro ao gerar história', detalhe: error.message }, origin);
     }
     return;
   }
