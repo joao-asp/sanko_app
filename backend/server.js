@@ -199,7 +199,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      if (titulo.length > 180 || descricao.length > 4000) {
+      if (titulo.length > 180 || descricao.length > 15000) {
         sendJson(res, 400, { error: 'titulo ou descricao excede o tamanho permitido' }, origin);
         return;
       }
