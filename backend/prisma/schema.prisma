@@ -11,6 +11,7 @@ model Pin {
   id        Int      @id @default(autoincrement())
   titulo    String
   descricao String
+  imagemUrl String?  // <- Campo novo para receber o link do S3 no futuro
   lat       Float
   lng       Float
   cor       String   @default("#ffd500")
