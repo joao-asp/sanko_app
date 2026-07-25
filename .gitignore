@@ -9,3 +9,8 @@ node_modules/
 .env
 codigo_para_ia.txt
 sanko.code-workspace
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
