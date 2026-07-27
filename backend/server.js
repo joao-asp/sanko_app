@@ -208,14 +208,15 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      // Salva no SQLite via Prisma
+      // Salva no SQLite via Prisma (AGORA SALVANDO A IMAGEM)
       const novoPin = await prisma.pin.create({
         data: {
           titulo: titulo,
           descricao: descricao,
           lat: payload.lat || 0,
           lng: payload.lng || 0,
-          cor: payload.cor || '#ffd500'
+          cor: payload.cor || '#ffd500',
+          imagemUrl: payload.imagemUrl || null
         }
       });
       result.pinSalvo = novoPin;
@@ -287,7 +288,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // --- ROTA GET: GERAR URL PRÉ-ASSINADA (ARQUIVO SEPARADO) ---
+  // --- ROTA GET: GERAR URL PRÉ-ASSINADA ---
   if (requestUrl.pathname === '/api/upload-url' && req.method === 'GET') {
     await handleUploadRoute(req, res, requestUrl, origin, sendJson);
     return;
