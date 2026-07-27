@@ -71,7 +71,7 @@ async function addUserConquista() {
         return;
     }
 
-    const btn = document.querySelector('.conquista-panel .btn-black');
+    const btn = document.querySelector('#story-modal .btn-black');
     const originalText = btn.innerText;
     btn.innerText = "SALVANDO...";
     btn.disabled = true;
@@ -140,6 +140,7 @@ async function addUserConquista() {
         document.getElementById('form-title').value = '';
         document.getElementById('form-desc').value = '';
         if(fileInput) fileInput.value = '';
+        localSelecionado = null;
 
         if(marcadorTemporario) {
             map.removeLayer(marcadorTemporario);
@@ -147,6 +148,7 @@ async function addUserConquista() {
             localSelecionado = null;
         }
         showToast("Memória cravada no mapa!", "success");
+        closeStoryModal();
     } catch (error) {
         console.error(error);
         showToast(error.message || "Erro ao cravar memória. Verifique a conexão.", "error");
@@ -223,6 +225,45 @@ function closeMapModal() {
     document.getElementById('conquista-modal').classList.remove('active');
 }
 
+function openStoryModal(){
+
+    if(!localSelecionado){
+
+        showToast(
+            "Primeiro clique no mapa para escolher o local.",
+            "error"
+        );
+
+        return;
+
+    }
+
+    document
+        .getElementById("story-modal")
+        .classList.add("active");
+
+}
+
+function closeStoryModal(){
+
+    document
+        .getElementById("story-modal")
+        .classList.remove("active");
+
+}
+
+window.addEventListener("click", function(e){
+
+    const modal = document.getElementById("story-modal");
+
+    if(e.target === modal){
+
+        closeStoryModal();
+
+    }
+
+});
+
 let currentSlide = 0;
 function moveCarousel(direction) {
     const track = document.getElementById('carousel-track');
@@ -255,8 +296,6 @@ function switchTab(tabId, btn) {
     if(tabId === 'mapa-comemorativo') { if(!map) initMap(); setTimeout(() => map.invalidateSize(), 100); }
 }
 
-function toggleMenu() { document.getElementById('mobileMenu').classList.toggle('active'); document.getElementById('menuOverlay').classList.toggle('active'); }
-function closeMenu() { document.getElementById('mobileMenu').classList.remove('active'); document.getElementById('menuOverlay').classList.remove('active'); }
 function switchTabAndClose(tabId, btn) { switchTab(tabId, btn); closeMenu(); }
 
 function showToast(msg, type = 'success') {

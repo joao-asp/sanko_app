@@ -35,6 +35,11 @@ nav {
     z-index: 1000; 
 }
 .nav-logo { display: flex; align-items: center; gap: 10px; }
+.nav-actions{
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
 .nav-logo h1 { font-family: var(--fonte-manchete); font-size: 24px; color: var(--destaque-amarelo); letter-spacing: 1px; text-transform: uppercase; margin: 0;}
 .nav-logo span { background: var(--alerta-vermelho); color: white; font-size: 11px; padding: 2px 8px; font-family: var(--fonte-documento); font-weight: bold; transform: rotate(-2deg); display: inline-block;}
 
@@ -141,9 +146,12 @@ nav {
 .neo-btn {
     font-family: var(--fonte-manchete); font-size: 16px; letter-spacing: 1px; text-transform: uppercase;
     border: 4px solid var(--tinta-preta); box-shadow: 4px 4px 0 var(--tinta-preta); cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s; padding: 10px;
+    transition: transform 0.1s, box-shadow 0.1s; padding: 10px; white-space: nowrap;
 }
 .neo-btn:active { transform: translate(4px, 4px); box-shadow: 0 0 0 transparent; }
+.neo-btn:hover{
+    transform:translate(-2px,-2px);
+}
 .neo-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: translate(4px, 4px); }
 
 .btn-red { background: var(--alerta-vermelho); color: white; }
@@ -212,11 +220,13 @@ nav {
 .mobile-menu .tab-btn { margin-bottom: 15px; font-size: 18px; text-align: left; }
 .menu-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
 .menu-overlay.active { display: block; }
-.hamburger { background: none; border: none; color: var(--destaque-amarelo); font-size: 28px; cursor: pointer; display: none; }
 
-#mapa-comemorativo { position: relative; background: var(--cor-mapa-fundo); }
+#mapa-comemorativo { position:relative;
+    background:var(--cor-mapa-fundo);
+    width:100%;
+    height:100%;
+    overflow:hidden; }
 #real-map { width: 100%; height: 100%; z-index: 1; filter: grayscale(100%) contrast(90%) brightness(110%); }
-.conquista-panel { position: absolute; top: 20px; right: 20px; width: 320px; z-index: 500; }
 .form-group { margin-bottom: 12px; }
 .form-group label { display: block; font-family: var(--fonte-manchete); font-size: 14px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px;}
 .form-group input, .form-group textarea { width: 100%; border: 2px solid var(--tinta-preta); padding: 8px; font-family: var(--fonte-documento); font-size: 13px; outline: none; }
@@ -239,6 +249,32 @@ nav {
    ========================================= */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(17,17,17,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; }
 .modal-overlay.active { display: flex; animation: fadeIn 0.3s; }
+.story-card{
+    background:var(--papel-fundo);
+    width:520px;
+    max-width:92%;
+    position:relative;
+    animation:fadeIn .25s ease;
+}
+
+.story-card h2{
+    color:var(--alerta-vermelho);
+    font-size:34px;
+}
+
+.story-card .form-group{
+    margin-bottom:15px;
+}
+
+.story-card textarea{
+    resize:vertical;
+    min-height:120px;
+}
+
+.story-card input,
+.story-card textarea{
+    background:white;
+}
 .conquista-card-detail { background: var(--papel-fundo); width: 600px; max-width: 90%; overflow: hidden; position: relative; padding: 0 !important; }
 .modal-close { position: absolute; top: 12px; right: 16px; background: var(--alerta-vermelho); border: 3px solid var(--tinta-preta); color: white; width: 40px; height: 40px; font-family: var(--fonte-manchete); font-size: 20px; cursor: pointer; z-index: 10; display:flex; align-items:center; justify-content:center; box-shadow: 3px 3px 0 var(--tinta-preta); transition: 0.1s;}
 .modal-close:active { transform: translate(3px, 3px); box-shadow: 0 0 0 transparent; }
@@ -275,8 +311,13 @@ nav {
 /* MOBILE RESPONSIVE */
 @media (max-width: 900px) {
     .nav-tabs { display: none; }
-    .hamburger { display: block; }
-    .mobile-menu { display: flex; }
+    .nav-actions{
+        gap:10px;
+    }
+    .nav-actions .neo-btn{
+        font-size:12px;
+        padding:8px 12px;
+    }
     .rpg-layout { flex-direction: column; padding: 15px; gap: 20px; }
     
     .rpg-sidebar { 
@@ -298,6 +339,11 @@ nav {
 }
 
 @media(max-width: 480px) {
+    .nav-actions .neo-btn{
+        font-size:11px;
+        padding:8px;
+    }
+
     #timer-minigame-mobile {
         display: flex;
         align-items: center;
