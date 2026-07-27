@@ -58,6 +58,8 @@ function initMap() {
 async function addUserConquista() {
     const title = document.getElementById('form-title').value.trim();
     const desc = document.getElementById('form-desc').value.trim();
+    const fileInput = document.getElementById('form-file'); // Captura o input da imagem
+    const file = fileInput.files[0];
 
     if(!localSelecionado) {
         showToast("Primeiro, clique no mapa para escolher o local!", "error");
@@ -77,33 +79,67 @@ async function addUserConquista() {
     const cores = ['#ffd500', '#d90429', '#2b9348', '#3a86ff', '#ff006e', '#00bbf9'];
     const corSorteada = cores[Math.floor(Math.random() * cores.length)];
 
-    // PAYLOAD ATUALIZADO (ITEM C)
-    const payload = {
-        titulo: title,
-        descricao: desc,
-        lat: localSelecionado.lat,
-        lng: localSelecionado.lng,
-        cor: corSorteada
-    };
-
     try {
+        let finalImageUrl = null;
+
+        // 1. SE HOUVER IMAGEM, FAZ O UPLOAD PARA O S3 PRIMEIRO
+        if (file) {
+            btn.innerText = "ENVIANDO FOTO...";
+            
+            // Pega a extensão real do arquivo (ex: jpg, png)
+            const ext = file.name.split('.').pop().toLowerCase();
+            
+            // Pede a Presigned URL para o backend
+            const urlRes = await fetch(`http://localhost:3000/api/upload-url?ext=${ext}`);
+            if (!urlRes.ok) throw new Error("Falha ao obter permissão de upload");
+            const urlData = await urlRes.json();
+
+            // Faz o upload do arquivo DIRETAMENTE para a AWS S3
+            const uploadRes = await fetch(urlData.uploadUrl, {
+                method: 'PUT',
+                headers: { 'Content-Type': file.type },
+                body: file
+            });
+
+            if (!uploadRes.ok) throw new Error("Falha ao enviar a imagem para o servidor");
+
+            // Guarda o link público gerado para salvar no banco
+            finalImageUrl = urlData.imageUrl;
+        }
+
+        btn.innerText = "CRAVANDO MEMÓRIA...";
+
+        // 2. CRIA O PAYLOAD COMPLETO COM A URL DA IMAGEM
+        const payload = {
+            titulo: title,
+            descricao: desc,
+            lat: localSelecionado.lat,
+            lng: localSelecionado.lng,
+            cor: corSorteada,
+            imagemUrl: finalImageUrl // Envia a URL pro backend salvar no Prisma
+        };
+
+        // 3. ENVIA TUDO PARA A API SALVAR NO BANCO
         const response = await fetch('http://localhost:3000/api/pins', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
 
-        if (!response.ok) throw new Error("Erro na moderação ou servidor");
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.motivo || "Erro na moderação ou servidor");
+        }
 
         const result = await response.json();
-        const novoPin = result.pinSalvo || payload; // Pega o pin retornado do backend
+        const novoPin = result.pinSalvo || payload; 
         
         adicionarPinDeMemoria(novoPin);
 
+        // Limpa os formulários
         document.getElementById('form-title').value = '';
         document.getElementById('form-desc').value = '';
-        const fileInput = document.getElementById('form-file');
-        if(fileInput) fileInput.value = ''; // Limpa o input de arquivo também
+        if(fileInput) fileInput.value = '';
 
         if(marcadorTemporario) {
             map.removeLayer(marcadorTemporario);
@@ -113,7 +149,7 @@ async function addUserConquista() {
         showToast("Memória cravada no mapa!", "success");
     } catch (error) {
         console.error(error);
-        showToast("Erro ao cravar memória. Verifique a conexão.", "error");
+        showToast(error.message || "Erro ao cravar memória. Verifique a conexão.", "error");
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
@@ -150,9 +186,13 @@ function adicionarPinDeMemoria(memoria) {
 
     const marker = L.marker([memoria.lat, memoria.lng], {icon: createIconMemoria()}).addTo(map);
 
-    // Aceita tanto title/desc (antigo) quanto titulo/descricao (backend)
+    // Aceita tanto title/desc (antigo) quanto titulo/descricao/imagemUrl (backend)
     marker.on('click', () => {
-        abrirModalMemoria(memoria.title || memoria.titulo, memoria.desc || memoria.descricao);
+        abrirModalMemoria(
+            memoria.title || memoria.titulo, 
+            memoria.desc || memoria.descricao,
+            memoria.imagemUrl // Passando a URL para a função modal
+        );
     });
 }
 
@@ -164,10 +204,14 @@ function limparMapa() {
 }
 
 // --- CONTROLE DO MODAL DE MEMÓRIAS E CARROSSEL ---
-function abrirModalMemoria(titulo, desc) {
+function abrirModalMemoria(titulo, desc, imagemUrl) {
     document.getElementById('modal-title').innerText = titulo;
     document.getElementById('modal-text').innerText = desc;
     document.getElementById('modal-meta').innerText = "Relato da Comunidade";
+    
+    // (Nota: A injeção da imagemUrl na interface do Carrossel será feita na task de UI do Frontend,
+    // mas a variável já está disponível aqui para quando precisarmos!)
+    
     document.getElementById('conquista-modal').classList.add('active');
     
     currentSlide = 0;
