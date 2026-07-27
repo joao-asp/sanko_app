@@ -1,3 +1,4 @@
+require('dotenv').config();
 const http = require('node:http');
 const { URL } = require('node:url');
 const { PrismaClient } = require('@prisma/client');
