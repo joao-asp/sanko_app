@@ -119,7 +119,11 @@
                                     descricao: 'Naquele ano, a rodovia bloqueava nosso acesso direto ao bairro vizinho e escolas. A comunidade se uniu e fechou a pista para exigir a passarela.',
                                     data: '2026-07-27T14:00:00Z', lat: -22.890, lng: -47.122, ip: '177.180.x.x'
                                 })">📄 VER VERBETE</button>
-                                <button class="neo-btn btn-red btn-sm">EXCLUIR</button>
+                                <button class="neo-btn btn-yellow btn-sm" onclick="editarPin({
+                                    id: 1, titulo: 'A Luta pela Passarela',
+                                    descricao: 'Naquele ano, a rodovia bloqueava nosso acesso direto ao bairro vizinho e escolas. A comunidade se uniu e fechou a pista para exigir a passarela.'
+                                })">EDITAR</button>
+                                <button class="neo-btn btn-red btn-sm" onclick="excluirPin(1)">EXCLUIR</button>
                             </td>
                         </tr>
                     </tbody>
@@ -208,6 +212,7 @@
                     <td>${descricaoCurta}</td>
                     <td class="table-actions">
                         <button class="neo-btn btn-white btn-sm" onclick='abrirVerbete(${JSON.stringify(pin).replace(/'/g, "&#39;")})'>📄 VER</button>
+                        <button class="neo-btn btn-yellow btn-sm" onclick='editarPin(${JSON.stringify(pin).replace(/'/g, "&#39;")})'>EDITAR</button>
                         <button class="neo-btn btn-red btn-sm" onclick="excluirPin(${pin.id})">EXCLUIR</button>
                     </td>
                 `;
@@ -253,6 +258,38 @@
             } catch (err) {
                 console.error(err);
                 alert('Erro ao excluir memória');
+            }
+        }
+
+        async function editarPin(pin) {
+            const novoTitulo = prompt(`Editar título do verbete #${pin.id}:`, pin.titulo);
+            if (novoTitulo === null) return;
+
+            const novaDescricao = prompt(`Editar descrição do verbete #${pin.id}:`, pin.descricao);
+            if (novaDescricao === null) return;
+
+            const titulo = novoTitulo.trim();
+            const descricao = novaDescricao.trim();
+
+            if (!titulo || !descricao) {
+                alert('Título e descrição são obrigatórios.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`http://localhost:3000/api/pins/${pin.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ titulo, descricao })
+                });
+
+                if (!res.ok) throw new Error('Erro ao editar no servidor');
+
+                alert(`Verbete #${pin.id} atualizado com sucesso!`);
+                carregarPinsAdmin();
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao editar memória');
             }
         }
 

@@ -22,7 +22,7 @@ function isAllowedOrigin(origin) {
 
 function withCorsHeaders(origin) {
   const headers = {
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Content-Type': 'application/json; charset=utf-8'
   };
@@ -292,6 +292,47 @@ const server = http.createServer(async (req, res) => {
   // --- ROTA GET: GERAR URL PRÉ-ASSINADA ---
   if (requestUrl.pathname === '/api/upload-url' && req.method === 'GET') {
     await handleUploadRoute(req, res, requestUrl, origin, sendJson);
+    return;
+  }
+
+  // --- ROTA PUT: EDITAR PIN ---
+  if (requestUrl.pathname.startsWith('/api/pins/') && req.method === 'PUT') {
+    try {
+      const id = Number(requestUrl.pathname.split('/').pop());
+      if (!Number.isInteger(id) || id <= 0) {
+        sendJson(res, 400, { error: 'id inválido' }, origin);
+        return;
+      }
+
+      const rawBody = await readBody(req);
+      const payload = JSON.parse(rawBody || '{}');
+      const titulo = typeof payload.titulo === 'string' ? payload.titulo.trim() : '';
+      const descricao = typeof payload.descricao === 'string' ? payload.descricao.trim() : '';
+
+      if (!titulo || !descricao) {
+        sendJson(res, 400, { error: 'titulo e descricao são obrigatórios' }, origin);
+        return;
+      }
+
+      if (titulo.length > 180 || descricao.length > 15000) {
+        sendJson(res, 400, { error: 'titulo ou descricao excede o tamanho permitido' }, origin);
+        return;
+      }
+
+      const pinAtualizado = await prisma.pin.update({
+        where: { id },
+        data: { titulo, descricao }
+      });
+
+      sendJson(res, 200, pinAtualizado, origin);
+    } catch (error) {
+      console.error("[ERRO PUT PIN]", error);
+      if (error && error.code === 'P2025') {
+        sendJson(res, 404, { error: 'Pin não encontrado' }, origin);
+        return;
+      }
+      sendJson(res, 500, { error: 'Erro ao atualizar pin' }, origin);
+    }
     return;
   }
 
