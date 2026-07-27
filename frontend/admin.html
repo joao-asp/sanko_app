@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SANKO - Painel de Controle</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Courier+Prime:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        /* Ajustes específicos para a tabela e barra de filtros do Admin */
+        .admin-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .admin-search {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border: 3px solid var(--tinta-preta);
+            font-family: var(--fonte-documento);
+            font-size: 14px;
+            outline: none;
+            background: white;
+            box-shadow: 3px 3px 0 var(--tinta-preta);
+        }
+        .admin-select {
+            padding: 10px 15px;
+            border: 3px solid var(--tinta-preta);
+            font-family: var(--fonte-manchete);
+            font-size: 16px;
+            outline: none;
+            background: var(--destaque-amarelo);
+            cursor: pointer;
+            box-shadow: 3px 3px 0 var(--tinta-preta);
+            text-transform: uppercase;
+        }
+        
+        /* Modal estilo Verbete de Wiki */
+        .admin-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(17,17,17,0.85); display: none; justify-content: center; align-items: center; z-index: 3000;
+        }
+        .admin-modal-overlay.active { display: flex; animation: fadeIn 0.3s; }
+        .wiki-card {
+            background: var(--papel-fundo); width: 700px; max-width: 95%; max-height: 90vh;
+            overflow-y: auto; border: 4px solid var(--tinta-preta); box-shadow: 10px 10px 0 var(--tinta-preta);
+            padding: 30px; position: relative;
+        }
+        .wiki-meta-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px; background: white; border: 3px solid var(--tinta-preta); padding: 15px;
+            margin: 15px 0; font-family: var(--fonte-documento); font-size: 13px;
+        }
+        .wiki-meta-item strong { display: block; font-family: var(--fonte-manchete); font-size: 14px; color: var(--alerta-vermelho); }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-logo">
+            <img src="assets/logo.png" alt="Sanko" style="height: 40px;">
+            <span style="font-size: 14px; padding: 4px 10px;">ADMIN</span>
+        </div>
+        <div class="nav-tabs">
+            <button class="tab-btn" onclick="window.location.href='index.html'">Voltar ao Mapa</button>
+        </div>
+    </nav>
+
+    <div class="content-viewport" style="overflow-y: auto; padding: 30px;">
+        <div class="admin-container neo-card w-100 p-20" style="max-width: 1300px; margin: 0 auto;">
+            <h2 class="phase-title" style="margin-top: 0; margin-bottom: 5px;">Gestão de Memórias</h2>
+            <p style="font-family: var(--fonte-documento); font-weight: bold; margin-bottom: 20px; opacity: 0.8;">
+                Painel de controle unificado. Filtre, ordene e clique em "Ver Verbete" para auditar os detalhes completos do relato.
+            </p>
+            
+            <!-- CONTROLES DE FILTRO E ORDENAÇÃO -->
+            <div class="admin-controls">
+                <input type="text" id="admin-search-input" class="admin-search" placeholder="🔍 Filtrar por título ou conteúdo..." oninput="filtrarEOrdenarTabela()">
+                <select id="admin-sort-select" class="admin-select" onchange="filtrarEOrdenarTabela()">
+                    <option value="recente">Mais Recentes</option>
+                    <option value="antigo">Mais Antigos</option>
+                    <option value="titulo">Título (A-Z)</option>
+                </select>
+            </div>
+
+            <!-- TABELA DE DADOS -->
+            <div class="table-responsive">
+                <table class="neo-table w-100">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">ID</th>
+                            <th style="width: 15%;">Data</th>
+                            <th style="width: 25%;">Título</th>
+                            <th style="width: 35%;">Descrição (Prévia)</th>
+                            <th style="width: 20%;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-table-body">
+                        <!-- Preenchido dinamicamente via JS ou dados mockados iniciais -->
+                        <tr>
+                            <td>1</td>
+                            <td>27/07/2026 14:00</td>
+                            <td><strong>A Luta pela Passarela</strong></td>
+                            <td>Naquele ano, a rodovia bloqueava nosso...</td>
+                            <td class="table-actions">
+                                <button class="neo-btn btn-white btn-sm" onclick="abrirVerbete({
+                                    id: 1, titulo: 'A Luta pela Passarela', 
+                                    descricao: 'Naquele ano, a rodovia bloqueava nosso acesso direto ao bairro vizinho e escolas. A comunidade se uniu e fechou a pista para exigir a passarela.',
+                                    data: '2026-07-27T14:00:00Z', lat: -22.890, lng: -47.122, ip: '177.180.x.x'
+                                })">📄 VER VERBETE</button>
+                                <button class="neo-btn btn-red btn-sm">EXCLUIR</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL WIKI VERBETE DETALHADO -->
+    <div id="wiki-modal" class="admin-modal-overlay">
+        <div class="wiki-card neo-card">
+            <button class="modal-close" onclick="fecharVerbete()">X</button>
+            
+            <span class="detail-meta" id="wiki-id-badge">VERBETE #01</span>
+            <h2 class="detail-title" id="wiki-title" style="font-size: 30px; margin-top: 10px;">Título da História</h2>
+            
+            <div class="wiki-meta-grid">
+                <div class="wiki-meta-item">
+                    <strong>Data de Envio</strong>
+                    <span id="wiki-date">-</span>
+                </div>
+                <div class="wiki-meta-item">
+                    <strong>Endereço IP</strong>
+                    <span id="wiki-ip">-</span>
+                </div>
+                <div class="wiki-meta-item">
+                    <strong>Coordenadas (Lat / Lng)</strong>
+                    <span id="wiki-coords">-</span>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <strong style="font-family: var(--fonte-manchete); font-size: 18px; display: block; margin-bottom: 5px;">RELATO COMPLETO:</strong>
+                <p id="wiki-full-text" class="detail-text" style="max-height: none; background: white; border: 2px solid var(--tinta-preta); padding: 15px;"></p>
+            </div>
+
+            <!-- Mini Mapa de Auditoria dentro do Verbete -->
+            <div>
+                <strong style="font-family: var(--fonte-manchete); font-size: 18px; display: block; margin-bottom: 5px;">LOCALIZAÇÃO EXATA:</strong>
+                <div id="wiki-mini-map" style="width: 100%; height: 220px; border: 3px solid var(--tinta-preta); filter: grayscale(100%) contrast(90%) brightness(110%);"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de Gestão, Filtros e Modais -->
+    <script>
+        let pinsGlobais = [];
+        let wikiMap = null;
+        let wikiMarker = null;
+
+        // 1. BUSCAR PINS DO SERVIDOR AO CARREGAR A PÁGINA
+        async function carregarPinsAdmin() {
+            try {
+                const response = await fetch('http://localhost:3000/api/pins');
+                if (!response.ok) throw new Error('Erro ao buscar pins do servidor');
+                pinsGlobais = await response.json();
+                filtrarEOrdenarTabela();
+            } catch (error) {
+                console.error("Erro ao carregar dados do admin:", error);
+                document.getElementById('admin-table-body').innerHTML = `
+                    <tr><td colspan="5" style="text-align:center; color: var(--alerta-vermelho); font-weight: bold;">
+                        Erro ao conectar com o servidor. Verifique se a API está rodando.
+                    </td></tr>`;
+            }
+        }
+
+        // 2. RENDERIZAR LINHAS NA TABELA
+        function renderizarTabela(pins) {
+            const tbody = document.getElementById('admin-table-body');
+            tbody.innerHTML = '';
+
+            if (pins.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; font-weight:bold;">Nenhuma memória encontrada.</td></tr>`;
+                return;
+            }
+
+            pins.forEach(pin => {
+                const dataFormatada = new Date(pin.data).toLocaleString('pt-BR');
+                const descricaoCurta = pin.descricao.length > 55 ? pin.descricao.substring(0, 55) + '...' : pin.descricao;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${pin.id}</td>
+                    <td>${dataFormatada}</td>
+                    <td><strong>${pin.titulo}</strong></td>
+                    <td>${descricaoCurta}</td>
+                    <td class="table-actions">
+                        <button class="neo-btn btn-white btn-sm" onclick='abrirVerbete(${JSON.stringify(pin).replace(/'/g, "&#39;")})'>📄 VER</button>
+                        <button class="neo-btn btn-red btn-sm" onclick="excluirPin(${pin.id})">EXCLUIR</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 3. FILTRAGEM E ORDENAÇÃO
+        function filtrarEOrdenarTabela() {
+            const termo = document.getElementById('admin-search-input').value.toLowerCase();
+            const ordenacao = document.getElementById('admin-sort-select').value;
+
+            let resultado = pinsGlobais.filter(pin => 
+                pin.titulo.toLowerCase().includes(termo) || 
+                pin.descricao.toLowerCase().includes(termo)
+            );
+
+            resultado.sort((a, b) => {
+                if (ordenacao === 'recente') {
+                    return new Date(b.data) - new Date(a.data);
+                } else if (ordenacao === 'antigo') {
+                    return new Date(a.data) - new Date(b.data);
+                } else if (ordenacao === 'titulo') {
+                    return a.titulo.localeCompare(b.titulo);
+                }
+            });
+
+            renderizarTabela(resultado);
+        }
+
+        // 4. AÇÃO DE EXCLUIR PIN
+        async function excluirPin(id) {
+            if (!confirm(`Deseja realmente excluir o verbete #${id}?`)) return;
+
+            try {
+                const res = await fetch(`http://localhost:3000/api/pins/${id}`, {
+                    method: 'DELETE'
+                });
+                if (!res.ok) throw new Error('Erro ao excluir no servidor');
+                
+                alert(`Verbete #${id} excluído com sucesso!`);
+                carregarPinsAdmin(); // Atualiza a tabela dinamicamente
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao excluir memória');
+            }
+        }
+
+        // 5. MODAL DO VERBETE WIKI
+        function abrirVerbete(pin) {
+            document.getElementById('wiki-id-badge').innerText = `VERBETE #${pin.id}`;
+            document.getElementById('wiki-title').innerText = pin.titulo;
+            document.getElementById('wiki-date').innerText = new Date(pin.data).toLocaleString('pt-BR');
+            document.getElementById('wiki-coords').innerText = `${pin.lat.toFixed(4)}, ${pin.lng.toFixed(4)}`;
+            document.getElementById('wiki-full-text').innerText = pin.descricao;
+
+            document.getElementById('wiki-modal').classList.add('active');
+
+            // Renderiza o mapa interno do modal de auditoria
+            setTimeout(() => {
+                const latLng = [pin.lat, pin.lng];
+                if (!wikiMap) {
+                    wikiMap = L.map('wiki-mini-map').setView(latLng, 15);
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                        attribution: '&copy; SANKO'
+                    }).addTo(wikiMap);
+                } else {
+                    wikiMap.setView(latLng, 15);
+                    wikiMap.invalidateSize();
+                }
+
+                if (wikiMarker) wikiMap.removeLayer(wikiMarker);
+                
+                const pinIcon = L.divIcon({ 
+                    className: 'custom-pin', 
+                    html: `<div class="pin-icon" style="background:${pin.cor || 'var(--alerta-vermelho)'}; border: 3px solid var(--tinta-preta);"><i style="color:white">★</i></div>`, 
+                    iconSize: [36,36], iconAnchor: [18,36]
+                });
+                wikiMarker = L.marker(latLng, { icon: pinIcon }).addTo(wikiMap);
+            }, 150);
+        }
+
+        function fecharVerbete() {
+            document.getElementById('wiki-modal').classList.remove('active');
+        }
+
+        // Inicializa buscando os dados do servidor
+        carregarPinsAdmin();
+    </script>
+</body>
+</html>

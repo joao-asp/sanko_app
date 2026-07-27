@@ -322,3 +322,76 @@ nav {
         width: 90%;
     }
 }
+
+/* =========================================
+   PAINEL ADMIN E TABELAS
+   ========================================= */
+.admin-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.neo-table {
+    border-collapse: collapse;
+    background: white;
+    border: 4px solid var(--tinta-preta);
+    font-family: var(--fonte-documento);
+}
+
+.neo-table th, .neo-table td {
+    border: 2px solid var(--tinta-preta);
+    padding: 12px 15px;
+    text-align: left;
+}
+
+.neo-table th {
+    background: var(--destaque-amarelo);
+    font-family: var(--fonte-manchete);
+    font-size: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--tinta-preta);
+}
+
+.neo-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.neo-table tbody tr:hover {
+    background-color: var(--cor-mapa-fundo);
+}
+
+.table-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 14px;
+    box-shadow: 3px 3px 0 var(--tinta-preta);
+}
+
+.btn-sm:active {
+    transform: translate(3px, 3px);
+    box-shadow: 0 0 0 transparent;
+}
+
+/* Layout da página Admin */
+.admin-grid {
+    display: grid;
+    grid-template-columns: 1fr 400px; /* A tabela ocupa o resto, o mapa fica com 400px */
+    gap: 25px;
+    align-items: start;
+}
+
+@media (max-width: 1000px) {
+    .admin-grid {
+        grid-template-columns: 1fr; /* Quebra para uma coluna em telas menores */
+    }
+}

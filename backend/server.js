@@ -294,6 +294,19 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // --- ROTA DELETE: EXCLUIR PIN ---
+  if (requestUrl.pathname.startsWith('/api/pins/') && req.method === 'DELETE') {
+    try {
+      const id = Number(requestUrl.pathname.split('/').pop());
+      await prisma.pin.delete({ where: { id } });
+      sendJson(res, 200, { ok: true }, origin);
+    } catch (error) {
+      console.error("[ERRO DELETE PIN]", error);
+      sendJson(res, 500, { error: 'Erro ao excluir pin' }, origin);
+    }
+    return;
+  }
+
   // Fallback para qualquer outra rota
   sendJson(res, 404, { error: 'Not Found' }, origin);
 });
