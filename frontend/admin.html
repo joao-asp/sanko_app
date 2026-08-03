@@ -16,6 +16,7 @@
     
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         /* Ajustes específicos para a tabela e barra de filtros do Admin */
         .admin-controls {
@@ -157,7 +158,7 @@
 
             <div style="margin-bottom: 20px;">
                 <strong style="font-family: var(--fonte-manchete); font-size: 18px; display: block; margin-bottom: 5px;">RELATO COMPLETO:</strong>
-                <p id="wiki-full-text" class="detail-text" style="max-height: none; background: white; border: 2px solid var(--tinta-preta); padding: 15px;"></p>
+                <div id="wiki-full-text" class="detail-text" style="max-height: none; background: white; border: 2px solid var(--tinta-preta); padding: 15px;"></div>
             </div>
 
             <!-- Mini Mapa de Auditoria dentro do Verbete -->
@@ -173,6 +174,42 @@
         let pinsGlobais = [];
         let wikiMap = null;
         let wikiMarker = null;
+
+        function sanitizeMarkdownHtml(html) {
+            const template = document.createElement('template');
+            template.innerHTML = String(html || '');
+
+            template.content.querySelectorAll('script, style, iframe, object, embed, form, input, button, textarea, select, link, meta').forEach((el) => el.remove());
+
+            template.content.querySelectorAll('*').forEach((el) => {
+                [...el.attributes].forEach((attr) => {
+                    const name = attr.name.toLowerCase();
+                    const value = attr.value.trim();
+
+                    if (name.startsWith('on')) {
+                        el.removeAttribute(attr.name);
+                        return;
+                    }
+
+                    if ((name === 'href' || name === 'src') && /^javascript:/i.test(value)) {
+                        el.removeAttribute(attr.name);
+                        return;
+                    }
+                });
+            });
+
+            return template.innerHTML;
+        }
+
+        function markdownToSafeHtml(texto) {
+            const textoBase = String(texto || '');
+            if (typeof marked === 'undefined') {
+                return textoBase.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+            }
+
+            const markdownHtml = marked.parse(textoBase);
+            return sanitizeMarkdownHtml(markdownHtml);
+        }
 
         // 1. BUSCAR PINS DO SERVIDOR AO CARREGAR A PÁGINA
         async function carregarPinsAdmin() {
@@ -209,7 +246,7 @@
                     <td>${pin.id}</td>
                     <td>${dataFormatada}</td>
                     <td><strong>${pin.titulo}</strong></td>
-                    <td>${descricaoCurta}</td>
+                    <td>${markdownToSafeHtml(descricaoCurta)}</td>
                     <td class="table-actions">
                         <button class="neo-btn btn-white btn-sm" onclick='abrirVerbete(${JSON.stringify(pin).replace(/'/g, "&#39;")})'>📄 VER</button>
                         <button class="neo-btn btn-yellow btn-sm" onclick='editarPin(${JSON.stringify(pin).replace(/'/g, "&#39;")})'>EDITAR</button>
@@ -299,7 +336,7 @@
             document.getElementById('wiki-title').innerText = pin.titulo;
             document.getElementById('wiki-date').innerText = new Date(pin.data).toLocaleString('pt-BR');
             document.getElementById('wiki-coords').innerText = `${pin.lat.toFixed(4)}, ${pin.lng.toFixed(4)}`;
-            document.getElementById('wiki-full-text').innerText = pin.descricao;
+            document.getElementById('wiki-full-text').innerHTML = markdownToSafeHtml(pin.descricao);
 
             document.getElementById('wiki-modal').classList.add('active');
 

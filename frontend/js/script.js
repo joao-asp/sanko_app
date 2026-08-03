@@ -3,6 +3,68 @@ let marcadorTemporario = null;
 let localSelecionado = null;
 const coordenadasPorPinId = new Map();
 
+function sanitizeMarkdownHtml(html) {
+    const template = document.createElement('template');
+    template.innerHTML = String(html || '');
+
+    template.content.querySelectorAll('script, style, iframe, object, embed, form, input, button, textarea, select, link, meta').forEach((el) => el.remove());
+
+    template.content.querySelectorAll('*').forEach((el) => {
+        [...el.attributes].forEach((attr) => {
+            const nome = attr.name.toLowerCase();
+            const valor = attr.value.trim();
+
+            if(nome.startsWith('on')) {
+                el.removeAttribute(attr.name);
+                return;
+            }
+
+            if((nome === 'href' || nome === 'src') && /^javascript:/i.test(valor)) {
+                el.removeAttribute(attr.name);
+                return;
+            }
+        });
+    });
+
+    return template.innerHTML;
+}
+
+function normalizarLinksDescricao(container) {
+    container.querySelectorAll('a').forEach((link) => {
+        const hrefOriginal = (link.getAttribute('href') || '').trim();
+        const pinIdNoHref = hrefOriginal.match(/^#(?:pin-)?(.+)$/i);
+
+        if(pinIdNoHref && !link.dataset.pinId) {
+            link.setAttribute('data-pin-id', pinIdNoHref[1]);
+        }
+
+        if(link.dataset.lat || link.dataset.lng || link.dataset.pinId || pinIdNoHref) {
+            link.setAttribute('href', '#');
+            return;
+        }
+
+        if(/^https?:\/\//i.test(hrefOriginal)) {
+            link.setAttribute('target', '_blank');
+            link.setAttribute('rel', 'noopener noreferrer');
+            return;
+        }
+
+        link.setAttribute('href', '#');
+    });
+}
+
+function renderizarMarkdownSeguro(container, texto) {
+    const textoBase = String(texto || '');
+    if(typeof marked === 'undefined') {
+        container.innerHTML = textoBase.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+        return;
+    }
+
+    const markdownHtml = marked.parse(textoBase);
+    container.innerHTML = sanitizeMarkdownHtml(markdownHtml);
+    normalizarLinksDescricao(container);
+}
+
 // --- SISTEMA DO MAPA E SALVAMENTO LOCAL/API ---
 function initMap() {
     if(map) return;
@@ -216,8 +278,7 @@ function limparMapa() {
 function abrirModalMemoria(titulo, desc, imagemUrl) {
     document.getElementById('modal-title').innerText = titulo;
     const modalText = document.getElementById('modal-text');
-    modalText.replaceChildren();
-    modalText.appendChild(sanitizarDescricaoComLinks(desc));
+    renderizarMarkdownSeguro(modalText, desc);
     document.getElementById('modal-meta').innerText = "Relato da Comunidade";
     
     // (Nota: A injeção da imagemUrl na interface do Carrossel será feita na task de UI do Frontend,
@@ -259,60 +320,6 @@ function closeStoryModal(){
         .getElementById("story-modal")
         .classList.remove("active");
 
-}
-
-function sanitizarDescricaoComLinks(descricao) {
-    const fragmentoSeguro = document.createDocumentFragment();
-    const descricaoTexto = String(descricao || '');
-
-    const appendTextoComQuebras = (texto) => {
-        const partes = texto.split('\n');
-        partes.forEach((parte, index) => {
-            fragmentoSeguro.appendChild(document.createTextNode(parte));
-            if(index < partes.length - 1) {
-                fragmentoSeguro.appendChild(document.createElement('br'));
-            }
-        });
-    };
-
-    const extrairAtributo = (atributos, nome) => {
-        const match = atributos.match(new RegExp(`${nome}\\s*=\\s*("([^"]*)"|'([^']*)'|([^\\s"'>]+))`, 'i'));
-        return (match && (match[2] || match[3] || match[4])) || null;
-    };
-
-    const regexLinks = /<a\b([^>]*)>([\s\S]*?)<\/a>/gi;
-    let ultimoIndice = 0;
-    let match;
-
-    while((match = regexLinks.exec(descricaoTexto)) !== null) {
-        const textoAntes = descricaoTexto.slice(ultimoIndice, match.index);
-        if(textoAntes) appendTextoComQuebras(textoAntes);
-
-        const atributos = match[1] || '';
-        const textoLink = match[2] || '';
-        const link = document.createElement('a');
-        link.textContent = textoLink;
-
-        const href = extrairAtributo(atributos, 'href') || '';
-        const matchPinHref = href.match(/^#(?:pin-)?(.+)$/i);
-        if(matchPinHref && !extrairAtributo(atributos, 'data-pin-id')) {
-            link.setAttribute('data-pin-id', matchPinHref[1]);
-        }
-        link.setAttribute('href', '#');
-
-        ['data-lat', 'data-lng', 'data-pin-id'].forEach((attr) => {
-            const valor = extrairAtributo(atributos, attr);
-            if(valor !== null) link.setAttribute(attr, valor);
-        });
-
-        fragmentoSeguro.appendChild(link);
-        ultimoIndice = regexLinks.lastIndex;
-    }
-
-    const textoRestante = descricaoTexto.slice(ultimoIndice);
-    if(textoRestante) appendTextoComQuebras(textoRestante);
-
-    return fragmentoSeguro;
 }
 
 function obterDestinoGeografico(link) {
@@ -801,11 +808,14 @@ async function carregarFases() {
             div.id = `phase-${fase.id}`;
             div.className = `story-phase neo-card p-20 mt-15 ${index === 0 ? 'active' : ''}`;
             
-            // Removido o <i> do fase.narrativa
+            const narrativaMarkdown = typeof marked === 'undefined'
+                ? String(fase.narrativa || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')
+                : sanitizeMarkdownHtml(marked.parse(String(fase.narrativa || '')));
+
             div.innerHTML = `
                 <div class="phase-year">${fase.ano}</div>
                 <div class="phase-title">${fase.titulo}</div>
-                <div class="gm-speech">📢 ${fase.narrativa}</div>
+                <div class="gm-speech">📢 ${narrativaMarkdown}</div>
                 <button id="btn-concluir-${fase.id}" class="neo-btn btn-yellow w-100 mt-20" style="padding: 18px; font-size: 24px;" onclick="${fase.botao_acao}">${fase.botao_texto}</button>
             `;
             containerFases.appendChild(div);
