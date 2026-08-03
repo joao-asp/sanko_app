@@ -1,6 +1,7 @@
 let map;
 let marcadorTemporario = null;
 let localSelecionado = null;
+const coordenadasPorPinId = new Map();
 
 // --- SISTEMA DO MAPA E SALVAMENTO LOCAL/API ---
 function initMap() {
@@ -187,6 +188,12 @@ function adicionarPinDeMemoria(memoria) {
     });
 
     const marker = L.marker([memoria.lat, memoria.lng], {icon: createIconMemoria()}).addTo(map);
+    const pinId = memoria?.id != null ? String(memoria.id) : null;
+    const lat = Number(memoria.lat);
+    const lng = Number(memoria.lng);
+    if(pinId && Number.isFinite(lat) && Number.isFinite(lng)) {
+        coordenadasPorPinId.set(pinId, [lat, lng]);
+    }
 
     // Aceita tanto title/desc (antigo) quanto titulo/descricao/imagemUrl (backend)
     marker.on('click', () => {
@@ -208,7 +215,9 @@ function limparMapa() {
 // --- CONTROLE DO MODAL DE MEMÓRIAS E CARROSSEL ---
 function abrirModalMemoria(titulo, desc, imagemUrl) {
     document.getElementById('modal-title').innerText = titulo;
-    document.getElementById('modal-text').innerText = desc;
+    const modalText = document.getElementById('modal-text');
+    modalText.replaceChildren();
+    modalText.appendChild(sanitizarDescricaoComLinks(desc));
     document.getElementById('modal-meta').innerText = "Relato da Comunidade";
     
     // (Nota: A injeção da imagemUrl na interface do Carrossel será feita na task de UI do Frontend,
@@ -251,6 +260,102 @@ function closeStoryModal(){
         .classList.remove("active");
 
 }
+
+function sanitizarDescricaoComLinks(descricao) {
+    const fragmentoSeguro = document.createDocumentFragment();
+    const descricaoTexto = String(descricao || '');
+
+    const appendTextoComQuebras = (texto) => {
+        const partes = texto.split('\n');
+        partes.forEach((parte, index) => {
+            fragmentoSeguro.appendChild(document.createTextNode(parte));
+            if(index < partes.length - 1) {
+                fragmentoSeguro.appendChild(document.createElement('br'));
+            }
+        });
+    };
+
+    const extrairAtributo = (atributos, nome) => {
+        const match = atributos.match(new RegExp(`${nome}\\s*=\\s*("([^"]*)"|'([^']*)'|([^\\s"'>]+))`, 'i'));
+        return (match && (match[2] || match[3] || match[4])) || null;
+    };
+
+    const regexLinks = /<a\b([^>]*)>([\s\S]*?)<\/a>/gi;
+    let ultimoIndice = 0;
+    let match;
+
+    while((match = regexLinks.exec(descricaoTexto)) !== null) {
+        const textoAntes = descricaoTexto.slice(ultimoIndice, match.index);
+        if(textoAntes) appendTextoComQuebras(textoAntes);
+
+        const atributos = match[1] || '';
+        const textoLink = match[2] || '';
+        const link = document.createElement('a');
+        link.textContent = textoLink;
+
+        const href = extrairAtributo(atributos, 'href') || '';
+        const matchPinHref = href.match(/^#(?:pin-)?(.+)$/i);
+        if(matchPinHref && !extrairAtributo(atributos, 'data-pin-id')) {
+            link.setAttribute('data-pin-id', matchPinHref[1]);
+        }
+        link.setAttribute('href', '#');
+
+        ['data-lat', 'data-lng', 'data-pin-id'].forEach((attr) => {
+            const valor = extrairAtributo(atributos, attr);
+            if(valor !== null) link.setAttribute(attr, valor);
+        });
+
+        fragmentoSeguro.appendChild(link);
+        ultimoIndice = regexLinks.lastIndex;
+    }
+
+    const textoRestante = descricaoTexto.slice(ultimoIndice);
+    if(textoRestante) appendTextoComQuebras(textoRestante);
+
+    return fragmentoSeguro;
+}
+
+function obterDestinoGeografico(link) {
+    const lat = Number(link.dataset.lat);
+    const lng = Number(link.dataset.lng);
+    if(Number.isFinite(lat) && Number.isFinite(lng)) {
+        return [lat, lng];
+    }
+
+    const pinIdDireto = link.dataset.pinId;
+    if(pinIdDireto && coordenadasPorPinId.has(pinIdDireto)) {
+        return coordenadasPorPinId.get(pinIdDireto);
+    }
+
+    const href = (link.getAttribute('href') || '').trim();
+    const matchPinId = href.match(/^#(?:pin-)?(.+)$/i);
+    if(matchPinId && coordenadasPorPinId.has(matchPinId[1])) {
+        return coordenadasPorPinId.get(matchPinId[1]);
+    }
+
+    return null;
+}
+
+function fecharModaisAtivos() {
+    document.querySelectorAll('.modal-overlay.active').forEach((modal) => {
+        modal.classList.remove('active');
+    });
+}
+
+document.addEventListener('click', (event) => {
+    const link = event.target.closest('#conquista-modal .detail-body a');
+    if(!link) return;
+
+    const destino = obterDestinoGeografico(link);
+    if(!destino) return;
+
+    event.preventDefault();
+    if(!map) initMap();
+    if(!map) return;
+
+    fecharModaisAtivos();
+    map.flyTo(destino, 16);
+});
 
 window.addEventListener("click", function(e){
 
