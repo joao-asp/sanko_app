@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SANKO - Resgatando Conquistas e Construindo o Futuro</title>
     
+    <link rel="shortcut icon" href="assets/favicon.webp" type="image/x-icon">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,7 +38,127 @@
 
     <div class="content-viewport">
         <div id="mapa-comemorativo" class="page-view active">
+
             <div id="real-map"></div>
+
+            <button
+                id="map-menu-button"
+                class="map-menu-button"
+                onclick="openMapMenu()"
+                aria-label="Abrir menu do mapa"
+            >
+                ☰
+            </button>
+
+            <div id="map-menu-modal" class="map-menu-modal">
+
+                <div class="map-menu-card">
+
+                    <button
+                        class="map-menu-close"
+                        onclick="closeMapMenu()"
+                        aria-label="Fechar menu"
+                    >
+                        X
+                    </button>
+
+                    <div class="map-menu-header">
+                        <span class="map-menu-kicker">SANKO</span>
+                        <h2>MENU</h2>
+                    </div>
+
+                    <div class="map-menu-content">
+
+                        <div class="map-menu-options">
+
+                            <button
+                                class="map-menu-option active"
+                                onclick="changeMapMenuContent('historia', this)"
+                            >
+                                HISTÓRIA
+                            </button>
+
+                            <button
+                                class="map-menu-option"
+                                onclick="changeMapMenuContent('info', this)"
+                            >
+                                SOBRE
+                            </button>
+
+                            <button
+                                class="map-menu-option"
+                                onclick="changeMapMenuContent('contato', this)"
+                            >
+                                CONTATO
+                            </button>
+
+                        </div>
+
+                        <div class="map-menu-panel">
+
+                            <div
+                                id="map-menu-content-historia"
+                                class="map-menu-section active"
+                            >
+                                <h3>HISTÓRIA</h3>
+
+                                <p>
+                                    O SANKO nasceu como uma ferramenta para preservar
+                                    e compartilhar as histórias e conquistas das
+                                    comunidades.
+                                </p>
+
+                                <p>
+                                    Aqui, cada ponto do mapa representa uma memória,
+                                    uma conquista ou um momento importante que merece
+                                    ser lembrado.
+                                </p>
+                            </div>
+
+                            <div
+                                id="map-menu-content-info"
+                                class="map-menu-section"
+                            >
+                                <h3>SOBRE</h3>
+
+                                <p>
+                                    O jogo funciona como uma ferramenta de facilitação, jogo educacional e 
+                                    engajamento comunitário.
+                                </p>
+
+                                <p>
+                                    Ele conduz os participantes por uma linha do 
+                                    tempo onde desafios do passado são apresentados, exigindo debate, união e 
+                                    tomada de decisão para que a comunidade (os jogadores) avance e garanta 
+                                    melhorias para o bairro.
+                                </p>
+                            </div>
+
+                            <div
+                                id="map-menu-content-contato"
+                                class="map-menu-section"
+                            >
+                                <h3>CONTATO</h3>
+
+                                <p>
+                                    Entre em contato com a equipe responsável pelo
+                                    projeto SANKO.
+                                </p>
+
+                                <p>
+                                    <strong>E-mail:</strong><br>
+                                    contato@sanko.app.br
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
             
             <div id="conquista-modal" class="modal-overlay">
                 <div class="conquista-card-detail neo-card p-0">

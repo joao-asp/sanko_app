@@ -262,7 +262,7 @@ function adicionarPinDeMemoria(memoria) {
         abrirModalMemoria(
             memoria.title || memoria.titulo, 
             memoria.desc || memoria.descricao,
-            memoria.imagemUrl // Passando a URL para a função modal
+            memoria.imagemUrl 
         );
     });
 }
@@ -274,7 +274,6 @@ function limparMapa() {
     }
 }
 
-// --- CONTROLE DO MODAL DE MEMÓRIAS E CARROSSEL ---
 function abrirModalMemoria(titulo, desc, imagemUrl) {
     document.getElementById('modal-title').innerText = titulo;
     const modalText = document.getElementById('modal-text');
@@ -321,6 +320,94 @@ function closeStoryModal(){
         .classList.remove("active");
 
 }
+
+function openMapMenu() {
+    const menu = document.getElementById('map-menu-modal');
+
+    if(!menu) return;
+
+    menu.classList.add('active');
+
+    changeMapMenuContent('historia');
+
+    document.body.style.overflow = 'hidden';
+}
+
+
+function closeMapMenu() {
+    const menu = document.getElementById('map-menu-modal');
+
+    if(!menu) return;
+
+    menu.classList.remove('active');
+
+    document.body.style.overflow = '';
+}
+
+
+function changeMapMenuContent(section, clickedButton = null) {
+
+    document
+        .querySelectorAll('.map-menu-section')
+        .forEach(content => {
+            content.classList.remove('active');
+        });
+
+
+    document
+        .querySelectorAll('.map-menu-option')
+        .forEach(button => {
+            button.classList.remove('active');
+        });
+
+
+    const selectedContent = document.getElementById(
+        `map-menu-content-${section}`
+    );
+
+    if(selectedContent) {
+        selectedContent.classList.add('active');
+    }
+
+
+    if(clickedButton) {
+
+        clickedButton.classList.add('active');
+
+    } else {
+
+        const button = document.querySelector(
+            `.map-menu-option[onclick*="'${section}'"]`
+        );
+
+        if(button) {
+            button.classList.add('active');
+        }
+
+    }
+}
+
+
+document.addEventListener('click', function(event) {
+
+    const modal = document.getElementById('map-menu-modal');
+
+    if(!modal) return;
+
+    if(event.target === modal) {
+        closeMapMenu();
+    }
+
+});
+
+
+document.addEventListener('keydown', function(event) {
+
+    if(event.key === 'Escape') {
+        closeMapMenu();
+    }
+
+});
 
 function obterDestinoGeografico(link) {
     const lat = Number(link.dataset.lat);

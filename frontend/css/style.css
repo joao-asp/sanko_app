@@ -221,12 +221,364 @@ nav {
 .menu-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
 .menu-overlay.active { display: block; }
 
-#mapa-comemorativo { position:relative;
-    background:var(--cor-mapa-fundo);
-    width:100%;
-    height:100%;
-    overflow:hidden; }
-#real-map { width: 100%; height: 100%; z-index: 1; filter: grayscale(100%) contrast(90%) brightness(110%); }
+#mapa-comemorativo {
+    position: relative;
+    display: block;
+    background: var(--cor-mapa-fundo);
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+#real-map {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    z-index: 1;
+
+    filter: grayscale(100%) contrast(90%) brightness(110%);
+}
+
+.map-menu-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--destaque-amarelo);
+    color: var(--tinta-preta);
+
+    border: 4px solid var(--tinta-preta);
+    box-shadow: 5px 5px 0 var(--tinta-preta);
+
+    font-family: Arial, sans-serif;
+    font-size: 32px;
+    font-weight: bold;
+    line-height: 1;
+
+    cursor: pointer;
+
+    z-index: 1000;
+
+    transition:
+        transform 0.1s ease,
+        box-shadow 0.1s ease;
+}
+
+.map-menu-button:hover {
+    transform: translate(-2px, -2px);
+}
+
+.map-menu-button:active {
+    transform: translate(5px, 5px);
+    box-shadow: 0 0 0 transparent;
+}
+
+.map-menu-modal {
+    position: fixed;
+
+    top: 0;
+    left: 0;
+
+    width: 100vw;
+    height: 100vh;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(17, 17, 17, 0.75);
+
+    z-index: 5000;
+}
+
+.map-menu-modal.active {
+    display: flex;
+    animation: fadeIn 0.25s ease;
+}
+
+.map-menu-card {
+    position: relative;
+
+    width: 700px;
+    max-width: 95%;
+    max-height: 85vh;
+
+    overflow: hidden;
+
+    background: var(--papel-fundo);
+
+    border: 4px solid var(--tinta-preta);
+
+    box-shadow: 10px 10px 0 var(--tinta-preta);
+
+    animation: fadeIn 0.25s ease;
+}
+
+.map-menu-header {
+    background: var(--tinta-preta);
+
+    color: white;
+
+    padding: 20px 25px;
+
+    border-bottom: 4px solid var(--tinta-preta);
+}
+
+.map-menu-kicker {
+    display: block;
+
+    color: var(--destaque-amarelo);
+
+    font-family: var(--fonte-documento);
+
+    font-size: 13px;
+
+    font-weight: bold;
+
+    letter-spacing: 2px;
+
+    margin-bottom: 3px;
+}
+
+.map-menu-header h2 {
+    margin: 0;
+
+    color: white;
+
+    font-family: var(--fonte-manchete);
+
+    font-size: 42px;
+
+    line-height: 1;
+}
+
+.map-menu-content {
+    display: flex;
+
+    min-height: 360px;
+
+    max-height: calc(85vh - 100px);
+}
+
+.map-menu-options {
+    width: 190px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+
+    padding: 20px;
+
+    background: #e0e0e0;
+
+    border-right: 4px solid var(--tinta-preta);
+}
+
+.map-menu-option {
+    width: 100%;
+
+    padding: 14px 12px;
+
+    background: white;
+
+    color: var(--tinta-preta);
+
+    border: 3px solid var(--tinta-preta);
+
+    box-shadow: 3px 3px 0 var(--tinta-preta);
+
+    font-family: var(--fonte-manchete);
+
+    font-size: 17px;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.1s ease,
+        box-shadow 0.1s ease;
+}
+
+.map-menu-option:hover {
+    transform: translate(-2px, -2px);
+}
+
+.map-menu-option:active {
+    transform: translate(3px, 3px);
+    box-shadow: 0 0 0 transparent;
+}
+
+.map-menu-option.active {
+    background: var(--alerta-vermelho);
+
+    color: white;
+
+    box-shadow: 4px 4px 0 var(--tinta-preta);
+}
+
+.map-menu-panel {
+    flex: 1;
+
+    padding: 30px;
+
+    overflow-y: auto;
+
+    background: var(--papel-fundo);
+}
+
+.map-menu-section {
+    display: none;
+
+    animation: fadeIn 0.2s ease;
+}
+
+.map-menu-section.active {
+    display: block;
+}
+
+.map-menu-section h3 {
+    margin-bottom: 20px;
+
+    color: var(--alerta-vermelho);
+
+    font-family: var(--fonte-manchete);
+
+    font-size: 34px;
+
+    line-height: 1;
+
+    text-transform: uppercase;
+}
+
+.map-menu-section p {
+    margin-bottom: 18px;
+
+    font-family: var(--fonte-leitura);
+
+    font-size: 17px;
+
+    line-height: 1.6;
+}
+
+.map-menu-close {
+    position: absolute;
+
+    top: 15px;
+    right: 15px;
+
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--alerta-vermelho);
+
+    color: white;
+
+    border: 3px solid var(--tinta-preta);
+
+    box-shadow: 3px 3px 0 var(--tinta-preta);
+
+    font-family: var(--fonte-manchete);
+
+    font-size: 18px;
+
+    cursor: pointer;
+
+    z-index: 10;
+}
+
+.map-menu-close:active {
+    transform: translate(3px, 3px);
+
+    box-shadow: 0 0 0 transparent;
+}
+
+@media (max-width: 700px) {
+
+    .map-menu-button {
+        top: 15px;
+        right: 15px;
+
+        width: 52px;
+        height: 52px;
+
+        font-size: 28px;
+    }
+
+    .map-menu-card {
+        width: 95%;
+
+        max-height: 90vh;
+    }
+
+    .map-menu-content {
+        flex-direction: column;
+
+        max-height: calc(90vh - 100px);
+    }
+
+    .map-menu-options {
+        width: 100%;
+
+        flex-direction: row;
+
+        padding: 12px;
+
+        border-right: none;
+        border-bottom: 4px solid var(--tinta-preta);
+
+        overflow-x: auto;
+    }
+
+    .map-menu-option {
+        min-width: 120px;
+
+        text-align: center;
+    }
+
+    .map-menu-panel {
+        padding: 22px;
+
+        overflow-y: auto;
+    }
+
+    .map-menu-header {
+        padding: 18px 20px;
+    }
+
+    .map-menu-header h2 {
+        font-size: 34px;
+    }
+
+    .map-menu-section h3 {
+        font-size: 28px;
+    }
+
+    .map-menu-section p {
+        font-size: 15px;
+    }
+}
+
 .form-group { margin-bottom: 12px; }
 .form-group label { display: block; font-family: var(--fonte-manchete); font-size: 14px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px;}
 .form-group input, .form-group textarea { width: 100%; border: 2px solid var(--tinta-preta); padding: 8px; font-family: var(--fonte-documento); font-size: 13px; outline: none; }
