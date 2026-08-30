@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.png" alt="Logo do Sanko" width="300">
+  <img src="frontend/assets/logo.png" alt="Logo do Sanko" width="300">
 </p>
 
 # Sanko
