@@ -68,7 +68,7 @@ jobs:
             --document-name AWS-RunShellScript \
             --instance-ids "$INSTANCE_ID" \
             --comment "deploy ${GITHUB_SHA}" \
-            --parameters 'commands=["sudo -u ubuntu bash -lc /home/ubuntu/sanko/scripts/deploy.sh"]' \
+            --parameters 'commands=["sudo -u ubuntu bash -lc \"cd /home/ubuntu/sanko && git fetch origin main && git reset --hard origin/main && bash scripts/deploy.sh\""]' \
             --query "Command.CommandId" --output text)
           echo "Comando SSM: $CMD_ID"
 
