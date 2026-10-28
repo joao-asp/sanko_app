@@ -91,3 +91,27 @@ terraform apply
 Recursos criados: repositório ECR, provider OIDC do GitHub, role de deploy (`sanko-gha-deploy`) e instance profile da EC2 (`sanko-ec2-profile`, com SSM + leitura do ECR).
 
 Bootstrap de uma instância nova (uma vez, via SSH): `bash scripts/bootstrap.sh`.
+
+---
+
+## Gestão de tarefas (GitHub Projects)
+
+O backlog fica no projeto **[Desenvolvimento Sankô](https://github.com/users/joao-asp/projects/1)** (GitHub Projects V2, owner `joao-asp`). Campos usados: `Status` (Todo / In progress / Done), `Priority` (P0/P1/P2) e `Size` (XS–XL).
+
+Requisitos: `gh` autenticado em `joao-asp` com o escopo `project` (`gh auth refresh -s project`).
+
+```bash
+# Listar itens e status
+gh project item-list 1 --owner joao-asp
+
+# Mover um item para Done
+gh project item-edit --id <ITEM_ID> --project-id PVT_kwHOB6YEaM4BauHx \
+  --field-id PVTSSF_lAHOB6YEaM4BauHxzhVjo5I --single-select-option-id 98236657
+```
+
+Atualizações registradas em 2026-10-28:
+
+- **Movidas para Done** (já implementadas no código): #23 *Substituir popups do Leaflet*, *Criar sistema de Toasts*, *Criar painel Sobre o Jogo*, *Implementar persistência local* e *Conectar JSONs de gamificação*.
+- **Criadas em Done**: `[BUG] Mapa visível ao entrar no modo jogo`, `[BUG] Campanha iniciava na última fase concluída`, `[INFRA] Backend em produção com CI/CD (ECR + SSM)`.
+- **Criada em Todo**: `[FRONTEND] Imagens do carrossel retornam 404`.
+- **Prioridade P1** nas tarefas abertas de frontend (#18 a #22 e a do carrossel).
