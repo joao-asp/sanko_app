@@ -490,13 +490,28 @@ function moveCarousel(direction) {
 
 function iniciarJogoPeloMapa() {
     closeMapModal();
+    reiniciarCampanha();
     const btnMestre = document.querySelector('.nav-tabs .tab-btn');
     if(btnMestre) {
         btnMestre.click();
     } else {
         switchTab('modo-jogo');
     }
-    showToast("Campanha Carregada: Escola Rita de Cássia", "success");
+    showToast("Campanha iniciada: Escola Rita de Cássia", "success");
+}
+
+// Começa a campanha do zero: primeira fase liberada e Força Comunitária zerada.
+function reiniciarCampanha() {
+    faseMaxConcluida = -1;
+    localStorage.removeItem('sanko_fase_max');
+
+    currentFC = 0;
+    localStorage.setItem('sanko_fc', 0);
+
+    const fcDisplay = document.getElementById('rpg-fc-display');
+    if (fcDisplay) fcDisplay.innerText = '0';
+
+    carregarFases();
 }
 
 function switchTab(tabId, btn) {
