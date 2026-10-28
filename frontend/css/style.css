@@ -223,7 +223,6 @@ nav {
 
 #mapa-comemorativo {
     position: relative;
-    display: block;
     background: var(--cor-mapa-fundo);
     width: 100%;
     height: 100%;
