@@ -164,7 +164,7 @@
             <!-- Mini Mapa de Auditoria dentro do Verbete -->
             <div>
                 <strong style="font-family: var(--fonte-manchete); font-size: 18px; display: block; margin-bottom: 5px;">LOCALIZAÇÃO EXATA:</strong>
-                <div id="wiki-mini-map" style="width: 100%; height: 220px; border: 3px solid var(--tinta-preta); filter: grayscale(100%) contrast(90%) brightness(110%);"></div>
+                <div id="wiki-mini-map" style="width: 100%; height: 220px; border: 3px solid var(--tinta-preta);"></div>
             </div>
         </div>
     </div>
@@ -345,8 +345,9 @@
                 const latLng = [pin.lat, pin.lng];
                 if (!wikiMap) {
                     wikiMap = L.map('wiki-mini-map').setView(latLng, 15);
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                        attribution: '&copy; SANKO'
+                    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
                     }).addTo(wikiMap);
                 } else {
                     wikiMap.setView(latLng, 15);

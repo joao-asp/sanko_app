@@ -69,8 +69,14 @@ function renderizarMarkdownSeguro(container, texto) {
 function initMap() {
     if(map) return;
     
-    map = L.map('real-map').setView([-22.892, -47.120], 14);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; SANKO' }).addTo(map);
+    // Ponto inicial: Escola Estadual Rita de Cássia (plus code 4R3V+C5 Campinas).
+    const escolaCoords = [-22.8962, -47.1570];
+    map = L.map('real-map').setView(escolaCoords, 16);
+    // OpenStreetMap não exige chave de API (o CARTO passou a exigir).
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
+    }).addTo(map);
     
     const createIcon = (l, c, textCol = 'white') => L.divIcon({ 
         className: 'custom-pin', 
@@ -80,7 +86,7 @@ function initMap() {
         popupAnchor: [0, -40]
     });
     
-    const markerEscola = L.marker([-22.890, -47.122], {icon: createIcon('★', 'var(--alerta-vermelho)', 'white')}).addTo(map);
+    const markerEscola = L.marker(escolaCoords, {icon: createIcon('★', 'var(--alerta-vermelho)', 'white')}).addTo(map);
     
     // Ao invés do popup nativo, abrimos o Modal rico com Carrossel
     markerEscola.on('click', () => {

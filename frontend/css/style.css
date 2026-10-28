@@ -238,7 +238,11 @@ nav {
     height: 100%;
 
     z-index: 1;
+}
 
+/* O filtro vai só nos tiles: assim os pins mantêm as cores. */
+#real-map .leaflet-tile-pane,
+#wiki-mini-map .leaflet-tile-pane {
     filter: grayscale(100%) contrast(90%) brightness(110%);
 }
 
