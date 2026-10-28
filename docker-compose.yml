@@ -1,17 +1,35 @@
-version: '3.8'
 services:
   web:
-    image: caddy:alpine
+    image: caddy:2-alpine
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
+      - "443:443/udp"
     volumes:
-      - ./frontend:/usr/share/caddy
+      - ./frontend:/srv
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
-    command: caddy file-server --domain sanko.app.br --root /usr/share/caddy
+    depends_on:
+      - api
+
+  api:
+    image: ${API_IMAGE:-459742122840.dkr.ecr.us-east-1.amazonaws.com/sanko-api:latest}
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # SQLite persistido no volume nomeado
+      DATABASE_URL: file:/data/sanko.db
+    volumes:
+      - sanko_data:/data
+    expose:
+      - "3000"
 
 volumes:
   caddy_data:
   caddy_config:
+  sanko_data:

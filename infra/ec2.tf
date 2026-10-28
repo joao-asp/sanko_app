@@ -18,9 +18,10 @@ resource "aws_eip" "sanko_eip" {
 resource "aws_instance" "sanko_server" {
   ami           = var.ami_id
   instance_type = var.instance_type
-  
-  key_name = aws_key_pair.sanko_ssh_key.key_name
+
+  key_name               = aws_key_pair.sanko_ssh_key.key_name
   vpc_security_group_ids = [aws_security_group.sanko_sg.id]
+  iam_instance_profile   = aws_iam_instance_profile.sanko_ec2.name
 
   user_data = <<-EOF
               #!/bin/bash

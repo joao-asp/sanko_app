@@ -3,6 +3,12 @@ let marcadorTemporario = null;
 let localSelecionado = null;
 const coordenadasPorPinId = new Map();
 
+// Em produção a API é servida pelo mesmo domínio, via proxy do Caddy (/api).
+// No dev local, o backend roda em http://localhost:3000.
+const API_BASE = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+    ? 'http://localhost:3000/api'
+    : '/api';
+
 function sanitizeMarkdownHtml(html) {
     const template = document.createElement('template');
     template.innerHTML = String(html || '');
@@ -159,7 +165,7 @@ async function addUserConquista() {
             const ext = file.name.split('.').pop().toLowerCase();
             
             // Pede a Presigned URL para o backend
-            const urlRes = await fetch(`http://localhost:3000/api/upload-url?ext=${ext}`);
+            const urlRes = await fetch(`${API_BASE}/upload-url?ext=${ext}`);
             if (!urlRes.ok) throw new Error("Falha ao obter permissão de upload");
             const urlData = await urlRes.json();
 
@@ -189,7 +195,7 @@ async function addUserConquista() {
         };
 
         // 3. ENVIA TUDO PARA A API SALVAR NO BANCO
-        const response = await fetch('http://localhost:3000/api/pins', {
+        const response = await fetch(`${API_BASE}/pins`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -229,7 +235,7 @@ async function addUserConquista() {
 
 async function carregarMemoriasSalvas() {
     try {
-        const response = await fetch('http://localhost:3000/api/pins');
+        const response = await fetch(`${API_BASE}/pins`);
         if (response.ok) {
             const pinsDB = await response.json();
             pinsDB.forEach(memoria => adicionarPinDeMemoria(memoria));

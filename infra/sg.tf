@@ -10,14 +10,6 @@ resource "aws_security_group" "sanko_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    description = "App Port"
-    from_port   = 3000
-    to_port     = 3000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   # LIBERAÇÃO DO HTTP (Porta 80) - Necessário para o Let's Encrypt
   ingress {
     description = "HTTP"

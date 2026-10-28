@@ -175,6 +175,11 @@
         let wikiMap = null;
         let wikiMarker = null;
 
+        // Em produção a API é servida pelo mesmo domínio, via proxy do Caddy (/api).
+        const API_BASE = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+            ? 'http://localhost:3000/api'
+            : '/api';
+
         function sanitizeMarkdownHtml(html) {
             const template = document.createElement('template');
             template.innerHTML = String(html || '');
@@ -214,7 +219,7 @@
         // 1. BUSCAR PINS DO SERVIDOR AO CARREGAR A PÁGINA
         async function carregarPinsAdmin() {
             try {
-                const response = await fetch('http://localhost:3000/api/pins');
+                const response = await fetch(`${API_BASE}/pins`);
                 if (!response.ok) throw new Error('Erro ao buscar pins do servidor');
                 pinsGlobais = await response.json();
                 filtrarEOrdenarTabela();
@@ -285,7 +290,7 @@
             if (!confirm(`Deseja realmente excluir o verbete #${id}?`)) return;
 
             try {
-                const res = await fetch(`http://localhost:3000/api/pins/${id}`, {
+                const res = await fetch(`${API_BASE}/pins/${id}`, {
                     method: 'DELETE'
                 });
                 if (!res.ok) throw new Error('Erro ao excluir no servidor');
@@ -314,7 +319,7 @@
             }
 
             try {
-                const res = await fetch(`http://localhost:3000/api/pins/${pin.id}`, {
+                const res = await fetch(`${API_BASE}/pins/${pin.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ titulo, descricao })
