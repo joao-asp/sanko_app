@@ -38,9 +38,9 @@ O jogo funciona como uma ferramenta de facilitação, jogo educacional e engajam
 ## Tecnologias Utilizadas
 
 * **Front-end:** HTML5, CSS3 (Variáveis, Flexbox, Grid) e JavaScript puro (Vanilla JS).
-* **Mapas:** Leaflet.js
-* **Armazenamento:** localStorage (para persistência de progresso e informações do mapa).
-* **Infraestrutura:** Docker e Nginx (para deploy rápido via containers).
+* **Mapas:** Leaflet.js + tiles do OpenStreetMap
+* **Back-end:** Node.js, Prisma (SQLite) e OpenRouter (moderação/storytelling)
+* **Infraestrutura:** Docker, Caddy e Terraform na AWS (EC2, S3, ECR)
 
 ---
 
@@ -64,3 +64,30 @@ O jogo funciona como uma ferramenta de facilitação, jogo educacional e engajam
 │
 └── assets/                  # Pasta para imagens, fotos do carrossel e logo
     └── logo.png             # Logo da aplicação
+```
+
+---
+
+## Deploy e CI/CD
+
+O deploy é automático: **todo push em `main` dispara o workflow** [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), que:
+
+1. autentica na AWS via **OIDC** (sem chaves estáticas no GitHub);
+2. builda a imagem da API (`backend/Dockerfile`) e publica no **ECR** (`sanko-api`);
+3. executa o deploy na instância EC2 via **SSM Run Command**;
+4. roda um smoke test em `https://sanko.app.br/healthz`.
+
+Na instância, [`scripts/deploy.sh`](scripts/deploy.sh) atualiza o código, baixa a imagem nova e recria os containers. O banco SQLite fica no volume `sanko_data` (persistente entre deploys).
+
+A infraestrutura é gerenciada pelo Terraform em [`infra/`](infra/):
+
+```bash
+cd infra
+terraform init
+terraform plan
+terraform apply
+```
+
+Recursos criados: repositório ECR, provider OIDC do GitHub, role de deploy (`sanko-gha-deploy`) e instance profile da EC2 (`sanko-ec2-profile`, com SSM + leitura do ECR).
+
+Bootstrap de uma instância nova (uma vez, via SSH): `bash scripts/bootstrap.sh`.
