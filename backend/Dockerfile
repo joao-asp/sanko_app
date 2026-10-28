@@ -5,6 +5,11 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# Prisma precisa de OpenSSL; a imagem slim não vem com ele
+RUN apt-get update -y \
+    && apt-get install -y --no-install-recommends openssl \
+    && rm -rf /var/lib/apt/lists/*
+
 # Dependências (inclui o Prisma CLI, usado no boot para criar/migrar o banco)
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
